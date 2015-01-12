@@ -26,6 +26,9 @@
 *.exe
 *.out
 *.app
+hts
+hta
+htc
 
 # VHDL stuff
 *.cf

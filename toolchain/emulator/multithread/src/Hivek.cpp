@@ -36,3 +36,8 @@ void Hivek::execute() {
 void Hivek::writeback() {
     // TODO
 }
+
+Hivek::Hivek() {
+    dpath.set_control(&ctrl);
+    dpath.set_regfile(&regfile);
+}

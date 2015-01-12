@@ -2,9 +2,14 @@
 #define HIVEK_MULTITHREAD_EMULATOR_HIVEK_H
 
 #include "MemoryHierarchy.h"
+#include "ControlSignals.h"
+#include "DatapathSignals.h"
 
 namespace HivekMultithreadEmulator {
     class Hivek {
+        public:
+            Hivek();
+
         public:
             void reset();
             void cycle();
@@ -24,9 +29,9 @@ namespace HivekMultithreadEmulator {
             MemoryHierarchy* mem;
 
         private:
-    //        ControlSignals ctrl;
-      //      DatapathSignals dpath;
-        //    RegisterFile reg_file;
+            ControlSignals ctrl;
+            DatapathSignals dpath;
+            RegisterFile regfile;
     };
 }
 
