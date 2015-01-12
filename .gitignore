@@ -26,3 +26,12 @@
 *.exe
 *.out
 *.app
+
+# VHDL stuff
+*.cf
+*.ghw
+*.gtkw
+
+# Vim
+*.swp
+*.swo
