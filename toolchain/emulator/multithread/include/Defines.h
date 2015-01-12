@@ -112,15 +112,16 @@ namespace HivekMultithreadEmulator {
 
     struct ControlTable {
         u32 alu_op;
-        u32 alu_src;
-        u32 alu_sh_src;
-        u32 alu_sh_mem_src;
+        u32 alu_pc_vra_sel;
+        u32 alu_vrb_immediate_sel;
+        u32 alu_sh_sel;
+        u32 alu_sh_mem_sel;
 
         u32 sh_type;
-        u32 sh_amnt_src;
+        u32 sh_amount_sel;
         u32 sh_add;
 
-        u32 r_dst_src;
+        u32 r_dst_sel;
         u32 r_wren;
         u32 p_wren;
         u32 m_wren;

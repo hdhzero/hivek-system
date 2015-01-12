@@ -1,5 +1,10 @@
-#include "DatapathSignals.h"
+#include "../include/DatapathSignals.h"
 using namespace HivekMultithreadEmulator;
+
+u32 DatapathSignals::get_instruction_in_lane(int lane) {
+    // TODO
+    return 0;
+}
 
 void DatapathSignals::generate_alu_res_for_lane(int lane) {
     u32 aluOp = ctrl->get_alu_op(lane);
@@ -11,7 +16,7 @@ void DatapathSignals::generate_alu_res_for_lane(int lane) {
 }
 
 u32 DatapathSignals::get_alu_first_operand(int lane) {
-    bool selector = ctrl->get_pc_vra_sel(lane);
+    bool selector = ctrl->get_alu_pc_vra_sel(lane);
 
     if (selector) {
         return pcs[lane][5]->read();
@@ -21,23 +26,24 @@ u32 DatapathSignals::get_alu_first_operand(int lane) {
 }
 
 u32 DatapathSignals::get_alu_second_operand(int lane) {
-    bool selector = ctrl->get_vrb_immediate_sel(lane);
+    bool selector = ctrl->get_alu_vrb_immediate_sel(lane);
 
     if (selector) {
         return immediate[lane][2]->read();
     } else {
-        return vrb[lane][1]->read();
+        return vrb[lane]->read();
     }
 }
 
 void DatapathSignals::generate_sh_res_for_lane(int lane) {
     u32 sh_t = ctrl->get_sh_type(lane);
+    u32 sh_a = ctrl->get_sh_add(lane);
     u32 sh_i = get_sh_amount(lane);
     u32 va   = vra[lane]->read();
     u32 vb   = vrb[lane]->read();
     u32 res  = barrel_shifter(sh_t, va, sh_i);
     
-    if (sh_add[lane][1]->read()) {
+    if (sh_a) {
         res += vb;
     }
 
@@ -45,7 +51,7 @@ void DatapathSignals::generate_sh_res_for_lane(int lane) {
 }
 
 void DatapathSignals::generate_alu_sh_res_for_lane(int lane) {
-    bool selector = ctrl->get_alu_sh_src(lane);
+    bool selector = ctrl->get_alu_sh_sel(lane);
 
     if (selector) {
         alu_sh_res[lane]->write(sh_res[lane]->read());
@@ -55,12 +61,49 @@ void DatapathSignals::generate_alu_sh_res_for_lane(int lane) {
 }
 
 u32 DatapathSignals::get_sh_amount(int lane) {
-    bool selector = ctrl->get_sh_amnt_src(lane);
+    bool selector = ctrl->get_sh_amount_sel(lane);
 
     if (selector) {
         return vrb[lane]->read() & 0x01F;
     } else {
         return sh_immediate[lane][2]->read() & 0x01F;
+    }
+}
+
+u32 DatapathSignals::alu(u32 op, u32 a, u32 b) {
+    switch (op) {
+        case ALU_ADD:
+            return a + b;
+
+        case ALU_SUB:
+            return a - b;
+
+        case ALU_AND:
+            return a & b;
+
+        case ALU_OR:
+            return a | b;
+
+        case ALU_NOR:
+            return ~(a | b);
+
+        case ALU_XOR:
+            return a ^ b;
+    }
+
+    return 0;
+}
+
+u32 DatapathSignals::barrel_shifter(u32 shift_type, u32 a, u32 shift_ammount) {
+    switch (shift_type) {
+        case BARREL_SLL:
+            return a << shift_ammount;
+
+        case BARREL_SRL:
+            return a >> shift_ammount;
+
+        case BARREL_SRA:
+            return ((i32) a) >> shift_ammount;
     }
 }
 

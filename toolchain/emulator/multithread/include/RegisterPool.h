@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <fstream>
-#include "Utils.h"
+#include "Defines.h"
 #include "Register.h"
 
 namespace HivekMultithreadEmulator {

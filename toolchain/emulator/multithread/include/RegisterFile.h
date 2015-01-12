@@ -1,7 +1,7 @@
 #ifndef REGISTER_BANK_H
 #define REGISTER_BANK_H
 
-#include "Utils.h"
+#include "Defines.h"
 #include "Register.h"
 #include "RegisterPool.h"
 

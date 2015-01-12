@@ -4,6 +4,7 @@
 #include "MemoryHierarchy.h"
 #include "ControlSignals.h"
 #include "DatapathSignals.h"
+#include "RegisterFile.h"
 
 namespace HivekMultithreadEmulator {
     class Hivek {

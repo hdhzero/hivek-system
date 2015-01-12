@@ -13,19 +13,30 @@ namespace HivekMultithreadEmulator {
             void generate_alu_res_for_lane(int lane);
             void generate_sh_res_for_lane(int lane);
             void generate_alu_sh_res_for_lane(int lane);
+            u32 get_instruction_in_lane(int lane);
 
         private:
             u32 get_alu_first_operand(int lane);
             u32 get_alu_second_operand(int lane);
-            u32 get_sh_ammount(int lane);
+            u32 get_sh_amount(int lane);
 
         private:
-            ControlSignals* ctrl;
+            u32 alu(u32 op, u32 a, u32 b);
+            u32 barrel_shifter(u32 shift_type, u32 a, u32 shift_ammount);
+
+        private:
+            class ControlSignals* ctrl;
+
+        private:
+            Register<u32>* pcs[N_LANES][7];
+
             Register<u32>* vra[N_LANES];
             Register<u32>* vrb[N_LANES];
             Register<u32>* immediate[N_LANES][3];
+
             Register<u32>* alu_res[N_LANES];
             Register<u32>* sh_res[N_LANES];
+
             Register<u32>* alu_sh_res[N_LANES];
             Register<u32>* mem_res[N_LANES];
 

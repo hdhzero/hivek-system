@@ -1,4 +1,4 @@
-#include "RegisterPool.h"
+#include "../include/RegisterPool.h"
 using namespace HivekMultithreadEmulator;
 
 Register<u32>* RegisterPool::create_register(std::string name, int width) {
