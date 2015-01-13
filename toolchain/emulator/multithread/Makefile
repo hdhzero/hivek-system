@@ -1,5 +1,6 @@
 all:
 	g++ src/RegisterPool.cpp \
+        src/RegisterFile.cpp \
         src/ControlSignals.cpp \
         src/DatapathSignals.cpp \
         src/Hivek.cpp \

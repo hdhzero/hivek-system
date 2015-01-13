@@ -2,7 +2,7 @@
 #define HIVEK_MULTITHREAD_EMULATOR_CONTROL_SIGNALS_H
 
 #include "Defines.h"
-#include "Utils.h"
+//#include "Utils.h"
 #include "Register.h"
 #include "DatapathSignals.h"
 
@@ -20,6 +20,7 @@ namespace HivekMultithreadEmulator {
             u32 get_sh_type(int lane);
             u32 get_sh_add(int lane);
             u32 get_sh_amount_sel(int lane);
+            u32 get_sh_immediate(int lane);
 
         private:
             void generate_alu_controls(int lane, ControlTable* ct);
@@ -41,7 +42,7 @@ namespace HivekMultithreadEmulator {
             Register<u32>* sh_type[N_LANES][2];
             Register<u32>* sh_amount_sel[N_LANES][2];
             Register<u32>* sh_add[N_LANES][2];
-            Register<u32>* sh_immd[N_LANES][3];
+            Register<u32>* sh_immediate[N_LANES][3];
     };
 }
 

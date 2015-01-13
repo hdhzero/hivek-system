@@ -27,6 +27,9 @@ namespace HivekMultithreadEmulator {
             void writeback();
 
         private:
+            RegisterPool rpool;
+
+        private:
             MemoryHierarchy* mem;
 
         private:

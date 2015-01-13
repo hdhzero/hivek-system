@@ -2,12 +2,18 @@
 #define HIVEK_MULTITHREAD_EMULATOR_DATAPATH_SIGNALS_H
 
 #include "Register.h"
+#include "RegisterPool.h"
+#include "RegisterFile.h"
 #include "ControlSignals.h"
 
 namespace HivekMultithreadEmulator {
     class DatapathSignals {
         public:
-            DatapathSignals();
+            void init();
+            void set_ctrl(class ControlSignals* ctrl);
+            void set_rpool(class RegisterPool* rpool);
+            void set_regfile(class RegisterFile* regfile);
+            void set_mem(class MemoryHierarchy* mem);
 
         public:
             void generate_alu_res_for_lane(int lane);
@@ -26,6 +32,9 @@ namespace HivekMultithreadEmulator {
 
         private:
             class ControlSignals* ctrl;
+            class RegisterPool* rpool;
+            class RegisterFile* regfile;
+            class MemoryHierarchy* mem;
 
         private:
             Register<u32>* pcs[N_LANES][7];

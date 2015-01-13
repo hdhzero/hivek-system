@@ -62,11 +62,12 @@ void DatapathSignals::generate_alu_sh_res_for_lane(int lane) {
 
 u32 DatapathSignals::get_sh_amount(int lane) {
     bool selector = ctrl->get_sh_amount_sel(lane);
+    u32 sh_immediate = ctrl->get_sh_immediate(lane);
 
     if (selector) {
         return vrb[lane]->read() & 0x01F;
     } else {
-        return sh_immediate[lane][2]->read() & 0x01F;
+        return sh_immediate;
     }
 }
 
@@ -107,9 +108,23 @@ u32 DatapathSignals::barrel_shifter(u32 shift_type, u32 a, u32 shift_ammount) {
     }
 }
 
-void DatapathSignals::init(ControlSignals* ctrl) {
+void DatapathSignals::set_ctrl(ControlSignals* ctrl) {
     this->ctrl = ctrl;
+}
 
+void DatapathSignals::set_rpool(RegisterPool* rpool) {
+    this->rpool = rpool;
+}
+
+void DatapathSignals::set_regfile(RegisterFile* regfile) {
+    this->regfile = regfile;
+}
+
+void DatapathSignals::set_mem(MemoryHierarchy* mem) {
+    this->mem = mem;
+}
+
+void DatapathSignals::init() {
     vra[0] = rpool->create_register("vra[0]", 32);
     vra[1] = rpool->create_register("vra[1]", 32);
 

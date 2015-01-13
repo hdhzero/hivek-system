@@ -49,6 +49,10 @@ u32 ControlSignals::get_sh_add(int lane) {
     return sh_add[lane][1]->read();
 }
 
+u32 ControlSignals::get_sh_immediate(int lane) {
+    return sh_immediate[lane][2]->read() & 0x01F;
+}
+
 void ControlSignals::generate_alu_controls(int lane, ControlTable* ct) {
     alu_op[lane][0]->write(ct->alu_op);
     alu_op[lane][1]->write(alu_op[lane][0]->read());
@@ -81,9 +85,9 @@ void ControlSignals::generate_sh_controls(int lane, ControlTable* ct) {
     sh_add[lane][0]->write(ct->sh_add);
     sh_add[lane][1]->write(sh_add[lane][0]->read());
 
-    sh_immd[lane][0]->write(extract_sh_immediate(inst));
-    sh_immd[lane][1]->write(sh_immd[lane][0]->read());
-    sh_immd[lane][2]->write(sh_immd[lane][1]->read());
+    sh_immediate[lane][0]->write(extract_sh_immediate(inst));
+    sh_immediate[lane][1]->write(sh_immediate[lane][0]->read());
+    sh_immediate[lane][2]->write(sh_immediate[lane][1]->read());
 }
 
 u32 ControlSignals::extract_sh_immediate(u32 instruction) {
