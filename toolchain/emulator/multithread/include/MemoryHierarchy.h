@@ -1,6 +1,9 @@
 #ifndef HIVEK_MULTITHREAD_EMULATOR_MEMORY_HIERARCHY_H
 #define HIVEK_MULTITHREAD_EMULATOR_MEMORY_HIERARCHY_H
 
+#include <vector>
+#include <fstream>
+
 namespace HivekMultithreadEmulator {
     class MemoryHierarchy {
         public:
@@ -10,6 +13,9 @@ namespace HivekMultithreadEmulator {
 
         public:
             void read_contents_from_file(char* filename);
+
+        private:
+            std::vector<char> ram;
     };
 }
 

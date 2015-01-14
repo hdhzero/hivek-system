@@ -39,10 +39,13 @@ void Hivek::writeback() {
 
 Hivek::Hivek() {
     // TODO
+    regfile.set_rpool(&rpool);
+
     dpath.set_ctrl(&ctrl);
     dpath.set_rpool(&rpool);
     dpath.set_regfile(&regfile);
     dpath.set_mem(mem);
 
     dpath.init();
+    regfile.init();
 }

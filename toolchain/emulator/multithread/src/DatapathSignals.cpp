@@ -21,7 +21,7 @@ u32 DatapathSignals::get_alu_first_operand(int lane) {
     if (selector) {
         return pcs[lane][5]->read();
     } else {
-        return vra[lane]->read();
+        return vra[lane][1]->read();
     }
 }
 
@@ -31,7 +31,7 @@ u32 DatapathSignals::get_alu_second_operand(int lane) {
     if (selector) {
         return immediate[lane][2]->read();
     } else {
-        return vrb[lane]->read();
+        return vrb[lane][1]->read();
     }
 }
 
@@ -39,8 +39,8 @@ void DatapathSignals::generate_sh_res_for_lane(int lane) {
     u32 sh_t = ctrl->get_sh_type(lane);
     u32 sh_a = ctrl->get_sh_add(lane);
     u32 sh_i = get_sh_amount(lane);
-    u32 va   = vra[lane]->read();
-    u32 vb   = vrb[lane]->read();
+    u32 va   = vra[lane][1]->read();
+    u32 vb   = vrb[lane][1]->read();
     u32 res  = barrel_shifter(sh_t, va, sh_i);
     
     if (sh_a) {
@@ -65,7 +65,7 @@ u32 DatapathSignals::get_sh_amount(int lane) {
     u32 sh_immediate = ctrl->get_sh_immediate(lane);
 
     if (selector) {
-        return vrb[lane]->read() & 0x01F;
+        return vrb[lane][1]->read() & 0x01F;
     } else {
         return sh_immediate;
     }
@@ -125,11 +125,17 @@ void DatapathSignals::set_mem(MemoryHierarchy* mem) {
 }
 
 void DatapathSignals::init() {
-    vra[0] = rpool->create_register("vra[0]", 32);
-    vra[1] = rpool->create_register("vra[1]", 32);
+    vra[0][0] = rpool->create_register("vra[0][0]", 32);
+    vra[0][1] = rpool->create_register("vra[0][1]", 32);
 
-    vrb[0] = rpool->create_register("vrb[0]", 32);
-    vrb[1] = rpool->create_register("vrb[1]", 32);
+    vra[1][0] = rpool->create_register("vra[1][0]", 32);
+    vra[1][1] = rpool->create_register("vra[1][1]", 32);
+
+    vrb[0][0] = rpool->create_register("vrb[0][0]", 32);
+    vrb[0][1] = rpool->create_register("vrb[0][1]", 32);
+
+    vrb[1][0] = rpool->create_register("vrb[1][0]", 32);
+    vrb[1][1] = rpool->create_register("vrb[1][1]", 32);
 
     immediate[0][0] = rpool->create_register("immediate[0][0]", 32);
     immediate[0][1] = rpool->create_register("immediate[0][1]", 32);

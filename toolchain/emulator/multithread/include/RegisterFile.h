@@ -13,8 +13,10 @@ namespace HivekMultithreadEmulator {
 
         public:
             void write(int lane, u32 thread, u32 wren, u32 rc, u32 vrc);
-            void read_ra(int lane, u32 thread, u32 ra);
-            void read_rb(int lane, u32 thread, u32 rb);
+            u32 read_ra(int lane, u32 thread, u32 ra);
+            u32 read_rb(int lane, u32 thread, u32 rb);
+
+        private:
             u32 get_vra(int lane);
             u32 get_vrb(int lane);
 
@@ -23,12 +25,12 @@ namespace HivekMultithreadEmulator {
 
         private:
             u32 registers[16][32];
-            Register<u32>* ra[N_LANES][2];
-            Register<u32>* rb[N_LANES][2];
+            Register<u32>* ra[N_LANES];
+            Register<u32>* rb[N_LANES];
             Register<u32>* rc[N_LANES];
             Register<u32>* vrc[N_LANES];
             Register<u32>* wren[N_LANES];
-            Register<u32>* thread_r[N_LANES][2];
+            Register<u32>* thread_r[N_LANES];
             Register<u32>* thread_w[N_LANES];
     };
 }
