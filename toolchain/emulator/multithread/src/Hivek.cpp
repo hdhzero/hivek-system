@@ -50,6 +50,7 @@ Hivek::Hivek() {
     dpath.set_regfile(&regfile);
     dpath.set_mem(mem);
 
+    ctrl.init();
     dpath.init();
     regfile.init();
 }
