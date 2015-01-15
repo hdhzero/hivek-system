@@ -2,12 +2,19 @@
 #define HIVEK_MULTITHREAD_EMULATOR_CONTROL_SIGNALS_H
 
 #include "Defines.h"
-//#include "Utils.h"
 #include "Register.h"
 #include "DatapathSignals.h"
+#include "RegisterFile.h"
+#include "RegisterPool.h"
 
 namespace HivekMultithreadEmulator {
     class ControlSignals {
+        public:
+            void init();
+            void set_dpath(class DatapathSignals* dpath);
+            void set_regfile(class RegisterFile* regfile);
+            void set_rpool(class RegisterPool* rpool);
+
         public:
             void generate_controls_for_lane(int lane);
 
@@ -26,6 +33,8 @@ namespace HivekMultithreadEmulator {
             void generate_alu_controls(int lane, ControlTable* ct);
             void generate_sh_controls(int lane, ControlTable* ct, u32 inst);
             void generate_reg_controls(int lane, ControlTable* ct, u32 inst);
+            void generate_pred_controls(int lane, ControlTable* ct, u32 inst);
+            void generate_mem_controls(int lane, ControlTable* ct);
 
         private:
             u32 control_address(u32 instruction);
@@ -35,6 +44,8 @@ namespace HivekMultithreadEmulator {
             u32 extract_ra(u32 instruction);
             u32 extract_rb(u32 instruction);
             u32 extract_rc(u32 instruction);
+            u32 extract_predicate_value(u32 instruction);
+            u32 extract_predicate_register(u32 instruction);
             u32 extract_sh_immd(u32 instruction);
             u32 extract_immd_from_type_i(u32 instruction);
 
@@ -48,6 +59,8 @@ namespace HivekMultithreadEmulator {
 
         private:
             class DatapathSignals* dpath;
+            class RegisterFile* regfile;
+            class RegisterPool* rpool;
 
         private:
             Register<u32>* ctrl_addr[N_LANES];
@@ -71,9 +84,9 @@ namespace HivekMultithreadEmulator {
             Register<u32>* rb_31_sel[N_LANES];
 
             Register<u32>* p_wren[N_LANES][4];
-            Register<u32>* predicate_value[N_LANES][3];
-            Register<u32>* predicate_rvalue[N_LANES][2];
-            Register<u32>* predicate_register[N_LANES][2];
+            Register<u32>* p_value[N_LANES][3];
+            Register<u32>* p_rvalue[N_LANES][2];
+            Register<u32>* p_register[N_LANES][2];
 
             Register<u32>* m_wren[N_LANES][2];
             Register<u32>* m_size[N_LANES][2];

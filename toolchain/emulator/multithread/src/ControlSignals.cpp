@@ -1,6 +1,18 @@
 #include "../include/ControlSignals.h"
 using namespace HivekMultithreadEmulator;
 
+void ControlSignals::set_dpath(DatapathSignals* dpath) {
+    this->dpath = dpath;
+}
+
+void ControlSignals::set_regfile(RegisterFile* regfile) {
+    this->regfile = regfile;
+}
+
+void ControlSignals::set_rpool(RegisterPool* rpool) {
+    this->rpool = rpool;
+}
+
 void ControlSignals::generate_controls_for_lane(int lane) {
     ControlTable* ct;
     u32 inst;
@@ -12,6 +24,7 @@ void ControlSignals::generate_controls_for_lane(int lane) {
     generate_alu_controls(lane, ct);
     generate_sh_controls(lane, ct, inst);
     generate_reg_controls(lane, ct, inst);
+    generate_pred_controls(lane, ct, inst);
     // TODO
 /*
 
@@ -124,8 +137,23 @@ void ControlSignals::generate_reg_controls(int lane, ControlTable* ct, u32 inst)
     }
 }
 
-u32 ControlSignals::extract_sh_immediate(u32 instruction) {
-    return (instruction >> 23) & 0x01F;
+void ControlSignals::generate_pred_controls(int lane, ControlTable* ct, u32 inst) {
+    p_wren[lane][0]->write(ct->p_wren);
+    p_wren[lane][1]->write(p_wren[lane][0]->read());
+    p_wren[lane][2]->write(p_wren[lane][1]->read());
+    p_wren[lane][3]->write(p_wren[lane][2]->read());
+
+    p_value[lane][0]->write(extract_predicate_value(inst));
+    p_value[lane][1]->write(p_value[lane][0]->read());
+    p_value[lane][2]->write(p_value[lane][1]->read());
+}
+
+void ControlSignals::generate_mem_controls(int lane, ControlTable* ct) {
+    m_wren[lane][0]->write(ct->m_wren);
+    m_wren[lane][1]->write(m_wren[lane][0]->read());
+
+    m_size[lane][0]->write(ct->m_size);
+    m_size[lane][1]->write(m_size[lane][0]->read());
 }
 
 u32 ControlSignals::control_address(u32 instruction) {
@@ -155,6 +183,14 @@ u32 ControlSignals::control_address(u32 instruction) {
     return 0;
 }
 
+u32 ControlSignals::extract_predicate_value(u32 instruction) {
+    return (instruction & 0x04) >> 2;
+}
+
+u32 ControlSignals::extract_predicate_register(u32 instruction) {
+    return instruction & 0x03;
+}
+
 u32 ControlSignals::extract_ra(u32 instruction) {
     return (instruction >> 3) & 0x01F;
 }
@@ -165,6 +201,10 @@ u32 ControlSignals::extract_rb(u32 instruction) {
 
 u32 ControlSignals::extract_rc(u32 instruction) {
     return (instruction >> 13) & 0x01F;
+}
+
+u32 ControlSignals::extract_sh_immediate(u32 instruction) {
+    return (instruction >> 23) & 0x01F;
 }
 
 u32 ControlSignals::extract_op_from_type_i(u32 instruction) {
@@ -199,3 +239,119 @@ int ControlSignals::is_shadd(u32 instruction) {
     return (instruction >> 23) & 0x03;
 }
 
+void ControlSignals::init() {
+    ctrl_addr[0] = rpool->create_register("ctrl_addr[0]", 8);
+    ctrl_addr[1] = rpool->create_register("ctrl_addr[1]", 8);
+
+    alu_op[0][0] = rpool->create_register("alu_op[0][0]", 4);
+    alu_op[0][1] = rpool->create_register("alu_op[0][1]", 4);
+    alu_op[1][0] = rpool->create_register("alu_op[1][0]", 4);
+    alu_op[1][1] = rpool->create_register("alu_op[1][1]", 4);
+
+    alu_pc_vra_sel[0][0] = rpool->create_register("alu_pc_vra_sel[0][0]", 1);
+    alu_pc_vra_sel[0][1] = rpool->create_register("alu_pc_vra_sel[0][1]", 1);
+    alu_pc_vra_sel[1][0] = rpool->create_register("alu_pc_vra_sel[1][0]", 1);
+    alu_pc_vra_sel[1][1] = rpool->create_register("alu_pc_vra_sel[1][1]", 1);
+
+    alu_vrb_immediate_sel[0][0] = rpool->create_register("alu_vrb_immediate_sel[0][0]", 1);
+    alu_vrb_immediate_sel[0][1] = rpool->create_register("alu_vrb_immediate_sel[0][1]", 1);
+    alu_vrb_immediate_sel[1][0] = rpool->create_register("alu_vrb_immediate_sel[1][0]", 1);
+    alu_vrb_immediate_sel[1][1] = rpool->create_register("alu_vrb_immediate_sel[1][1]", 1);
+
+    alu_sh_sel[0][0] = rpool->create_register("alu_sh_sel[0][0]", 1);
+    alu_sh_sel[0][1] = rpool->create_register("alu_sh_sel[0][1]", 1);
+    alu_sh_sel[0][2] = rpool->create_register("alu_sh_sel[0][2]", 1);
+    alu_sh_sel[1][0] = rpool->create_register("alu_sh_sel[1][0]", 1);
+    alu_sh_sel[1][1] = rpool->create_register("alu_sh_sel[1][1]", 1);
+    alu_sh_sel[1][2] = rpool->create_register("alu_sh_sel[1][2]", 1);
+
+    alu_sh_mem_sel[0][0] = rpool->create_register("alu_sh_mem_sel[0][0]", 1);
+    alu_sh_mem_sel[0][1] = rpool->create_register("alu_sh_mem_sel[0][1]", 1);
+    alu_sh_mem_sel[0][2] = rpool->create_register("alu_sh_mem_sel[0][2]", 1);
+    alu_sh_mem_sel[0][3] = rpool->create_register("alu_sh_mem_sel[0][3]", 1);
+    alu_sh_mem_sel[1][0] = rpool->create_register("alu_sh_mem_sel[1][0]", 1);
+    alu_sh_mem_sel[1][1] = rpool->create_register("alu_sh_mem_sel[1][1]", 1);
+    alu_sh_mem_sel[1][2] = rpool->create_register("alu_sh_mem_sel[1][2]", 1);
+    alu_sh_mem_sel[1][3] = rpool->create_register("alu_sh_mem_sel[1][3]", 1);
+
+    sh_type[0][0] = rpool->create_register("sh_type[0][0]", 2);
+    sh_type[0][1] = rpool->create_register("sh_type[0][1]", 2);
+    sh_type[1][0] = rpool->create_register("sh_type[1][0]", 2);
+    sh_type[1][1] = rpool->create_register("sh_type[1][1]", 2);
+
+    sh_amount_sel[0][0] = rpool->create_register("sh_amount_sel[0][0]", 1);
+    sh_amount_sel[0][1] = rpool->create_register("sh_amount_sel[0][1]", 1);
+    sh_amount_sel[1][0] = rpool->create_register("sh_amount_sel[1][0]", 1);
+    sh_amount_sel[1][1] = rpool->create_register("sh_amount_sel[1][1]", 1);
+
+    sh_add[0][0] = rpool->create_register("sh_add[0][0]", 1);
+    sh_add[0][1] = rpool->create_register("sh_add[0][1]", 1);
+    sh_add[1][0] = rpool->create_register("sh_add[1][0]", 1);
+    sh_add[1][1] = rpool->create_register("sh_add[1][1]", 1);
+
+    sh_immediate[0][0] = rpool->create_register("sh_immediate[0][0]", 5);
+    sh_immediate[0][1] = rpool->create_register("sh_immediate[0][1]", 5);
+    sh_immediate[1][0] = rpool->create_register("sh_immediate[1][0]", 5);
+    sh_immediate[1][1] = rpool->create_register("sh_immediate[1][1]", 5);
+
+    ra = rpool->create_register("ra", 5);
+
+    rb[0][0] = rpool->create_register("rb[0][0]", 5);
+    rb[0][1] = rpool->create_register("rb[0][1]", 5);
+    rb[1][0] = rpool->create_register("rb[1][0]", 5);
+    rb[1][1] = rpool->create_register("rb[1][1]", 5);
+
+    rc[0][0] = rpool->create_register("rc[0][0]", 5);
+    rc[0][1] = rpool->create_register("rc[0][1]", 5);
+    rc[0][2] = rpool->create_register("rc[0][2]", 5);
+    rc[0][3] = rpool->create_register("rc[0][3]", 5);
+    rc[0][4] = rpool->create_register("rc[0][4]", 5);
+    rc[1][0] = rpool->create_register("rc[1][0]", 5);
+    rc[1][1] = rpool->create_register("rc[1][1]", 5);
+    rc[1][2] = rpool->create_register("rc[1][2]", 5);
+    rc[1][3] = rpool->create_register("rc[1][3]", 5);
+    rc[1][4] = rpool->create_register("rc[1][4]", 5);
+
+    r_wren[0][0] = rpool->create_register("r_wren[0][0]", 1);
+    r_wren[0][1] = rpool->create_register("r_wren[0][1]", 1);
+    r_wren[0][2] = rpool->create_register("r_wren[0][2]", 1);
+    r_wren[0][3] = rpool->create_register("r_wren[0][3]", 1);
+    r_wren[1][0] = rpool->create_register("r_wren[1][0]", 1);
+    r_wren[1][1] = rpool->create_register("r_wren[1][1]", 1);
+    r_wren[1][2] = rpool->create_register("r_wren[1][2]", 1);
+    r_wren[1][3] = rpool->create_register("r_wren[1][3]", 1);
+
+    r_dst_sel[0] = rpool->create_register("r_dst_sel[0]", 1);
+    r_dst_sel[1] = rpool->create_register("r_dst_sel[1]", 1);
+
+    rb_31_sel[0] = rpool->create_register("rb_31_sel[0]", 1);
+    rb_31_sel[1] = rpool->create_register("rb_31_sel[1]", 1);
+
+    p_wren[0][0] = rpool->create_register("p_wren[0][0]", 1);
+    p_wren[0][1] = rpool->create_register("p_wren[0][1]", 1);
+    p_wren[0][2] = rpool->create_register("p_wren[0][2]", 1);
+    p_wren[0][3] = rpool->create_register("p_wren[0][3]", 1);
+    p_wren[1][0] = rpool->create_register("p_wren[1][0]", 1);
+    p_wren[1][1] = rpool->create_register("p_wren[1][1]", 1);
+    p_wren[1][2] = rpool->create_register("p_wren[1][2]", 1);
+    p_wren[1][3] = rpool->create_register("p_wren[1][3]", 1);
+
+    p_value[0][0] = rpool->create_register("p_value[0][0]", 1);
+    p_value[0][1] = rpool->create_register("p_value[0][1]", 1);
+    p_value[0][2] = rpool->create_register("p_value[0][2]", 1);
+    p_value[1][0] = rpool->create_register("p_value[1][0]", 1);
+    p_value[1][1] = rpool->create_register("p_value[1][1]", 1);
+    p_value[1][2] = rpool->create_register("p_value[1][2]", 1);
+
+    // TODO
+
+    m_wren[0][0] = rpool->create_register("m_wren[0][0]", 1);
+    m_wren[0][1] = rpool->create_register("m_wren[0][1]", 1);
+    m_wren[1][0] = rpool->create_register("m_wren[1][0]", 1);
+    m_wren[1][1] = rpool->create_register("m_wren[1][1]", 1);
+
+    m_size[0][0] = rpool->create_register("m_size[0][0]", 2);
+    m_size[0][1] = rpool->create_register("m_size[0][1]", 2);
+    m_size[1][0] = rpool->create_register("m_size[1][0]", 2);
+    m_size[1][1] = rpool->create_register("m_size[1][1]", 2);
+}

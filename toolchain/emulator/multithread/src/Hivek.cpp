@@ -41,6 +41,10 @@ Hivek::Hivek() {
     // TODO
     regfile.set_rpool(&rpool);
 
+    ctrl.set_rpool(&rpool);
+    ctrl.set_regfile(&regfile);
+    ctrl.set_dpath(&dpath);
+
     dpath.set_ctrl(&ctrl);
     dpath.set_rpool(&rpool);
     dpath.set_regfile(&regfile);
