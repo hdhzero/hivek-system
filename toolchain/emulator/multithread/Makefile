@@ -1,5 +1,5 @@
 all:
-	g++ src/RegisterPool.cpp \
+	g++ -g src/RegisterPool.cpp \
         src/VCDMonitor.cpp \
         src/RegisterFile.cpp \
         src/Hivek.cpp \

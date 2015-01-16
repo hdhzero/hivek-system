@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 
     hivek.set_memory_hierarchy(&mem);
     hivek.add_waves_to_vcd(&vcd);
-    mem.read_contents_from_file(argv[1]);
+    //mem.read_contents_from_file(argv[1]);
    
     vcd.open("waves.vcd"); 
     vcd.create_vcd_header();

@@ -1,4 +1,6 @@
 #include "../include/Hivek.h"
+#include <sstream>
+#include <iostream>
 using namespace HivekMultithreadEmulator;
 
 void Hivek::reset() {
@@ -55,6 +57,18 @@ void Hivek::writeback() {
     // TODO
     writeback_lane(0);
     writeback_lane(1);
+}
+
+void Hivek::calculate_next_rt_pc() {
+    // TODO
+}
+
+void Hivek::calculate_next_nrt_pc() {
+    // TODO
+}
+
+void Hivek::read_registers_in_lane(int lane) {
+    // TODO
 }
 
 void Hivek::generate_controls_for_lane(int lane) {
@@ -350,157 +364,74 @@ int Hivek::is_shadd(u32 instruction) {
 }
 
 void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
-
+    ptr->add_register(ctrl_addr[0]);
+    ptr->add_register(alu_op[0][0]);
+std::cout << ctrl_addr[0]->name << '\n';
+std::cout << alu_op[0][0]->name << '\n';
 }
 
 Hivek::Hivek() {
+#define BUILDM(S,R,C,Z) do { \
+for (int i=0; i<R; ++i) { for (int j=0; j<C; ++j) { \
+std::stringstream t; t << #S << "{" << i << "}{" << j << "}"; \
+S[i][j] = rpool.create_register(t.str(), Z); \
+}}} while (0)
+
+#define BUILD(S,R,Z) do { \
+for (int i=0; i<R; ++i) { \
+std::stringstream t; t << #S << "{" << i << "}"; \
+S[i] = rpool.create_register(t.str(), Z); \
+}} while (0)
+
     // TODO
     regfile.set_rpool(&rpool);
     regfile.init();
 
-    ctrl_addr[0] = rpool.create_register("ctrl_addr[0]", 8);
-    ctrl_addr[1] = rpool.create_register("ctrl_addr[1]", 8);
+    BUILD(ctrl_addr, 2, 8);
+    BUILD(primary_thread, 2, 3);
+    BUILD(pc, 16, 32);
+    BUILDM(pcs, 2, 7, 32);
+    rt_instructions = rpool.create_register64("rt_instructions", 64);
+    nrt_instructions = rpool.create_register64("nrt_instructions", 64);
+    BUILDM(threads, 2, 6, 4);
 
-    alu_op[0][0] = rpool.create_register("alu_op[0][0]", 4);
-    alu_op[0][1] = rpool.create_register("alu_op[0][1]", 4);
-    alu_op[1][0] = rpool.create_register("alu_op[1][0]", 4);
-    alu_op[1][1] = rpool.create_register("alu_op[1][1]", 4);
+    BUILD(instructions, 2, 32);
+    BUILDM(instruction_size, 2, 5, 2);
+    BUILDM(instruction_kind, 2, 3, 2);
+    BUILD(instruction_rtk, 5, 3);
 
-    alu_pc_vra_sel[0][0] = rpool.create_register("alu_pc_vra_sel[0][0]", 1);
-    alu_pc_vra_sel[0][1] = rpool.create_register("alu_pc_vra_sel[0][1]", 1);
-    alu_pc_vra_sel[1][0] = rpool.create_register("alu_pc_vra_sel[1][0]", 1);
-    alu_pc_vra_sel[1][1] = rpool.create_register("alu_pc_vra_sel[1][1]", 1);
+    BUILDM(alu_op, 2, 2, 4);
+    BUILDM(alu_pc_vra_sel, 2, 2, 1);
+    BUILDM(alu_vrb_immediate_sel, 2, 2, 1);
+    BUILDM(alu_sh_sel, 2, 3, 1);
+    BUILDM(alu_sh_mem_sel, 2, 4, 1);
 
-    alu_vrb_immediate_sel[0][0] = rpool.create_register("alu_vrb_immediate_sel[0][0]", 1);
-    alu_vrb_immediate_sel[0][1] = rpool.create_register("alu_vrb_immediate_sel[0][1]", 1);
-    alu_vrb_immediate_sel[1][0] = rpool.create_register("alu_vrb_immediate_sel[1][0]", 1);
-    alu_vrb_immediate_sel[1][1] = rpool.create_register("alu_vrb_immediate_sel[1][1]", 1);
-
-    alu_sh_sel[0][0] = rpool.create_register("alu_sh_sel[0][0]", 1);
-    alu_sh_sel[0][1] = rpool.create_register("alu_sh_sel[0][1]", 1);
-    alu_sh_sel[0][2] = rpool.create_register("alu_sh_sel[0][2]", 1);
-    alu_sh_sel[1][0] = rpool.create_register("alu_sh_sel[1][0]", 1);
-    alu_sh_sel[1][1] = rpool.create_register("alu_sh_sel[1][1]", 1);
-    alu_sh_sel[1][2] = rpool.create_register("alu_sh_sel[1][2]", 1);
-
-    alu_sh_mem_sel[0][0] = rpool.create_register("alu_sh_mem_sel[0][0]", 1);
-    alu_sh_mem_sel[0][1] = rpool.create_register("alu_sh_mem_sel[0][1]", 1);
-    alu_sh_mem_sel[0][2] = rpool.create_register("alu_sh_mem_sel[0][2]", 1);
-    alu_sh_mem_sel[0][3] = rpool.create_register("alu_sh_mem_sel[0][3]", 1);
-    alu_sh_mem_sel[1][0] = rpool.create_register("alu_sh_mem_sel[1][0]", 1);
-    alu_sh_mem_sel[1][1] = rpool.create_register("alu_sh_mem_sel[1][1]", 1);
-    alu_sh_mem_sel[1][2] = rpool.create_register("alu_sh_mem_sel[1][2]", 1);
-    alu_sh_mem_sel[1][3] = rpool.create_register("alu_sh_mem_sel[1][3]", 1);
-
-    sh_type[0][0] = rpool.create_register("sh_type[0][0]", 2);
-    sh_type[0][1] = rpool.create_register("sh_type[0][1]", 2);
-    sh_type[1][0] = rpool.create_register("sh_type[1][0]", 2);
-    sh_type[1][1] = rpool.create_register("sh_type[1][1]", 2);
-
-    sh_amount_sel[0][0] = rpool.create_register("sh_amount_sel[0][0]", 1);
-    sh_amount_sel[0][1] = rpool.create_register("sh_amount_sel[0][1]", 1);
-    sh_amount_sel[1][0] = rpool.create_register("sh_amount_sel[1][0]", 1);
-    sh_amount_sel[1][1] = rpool.create_register("sh_amount_sel[1][1]", 1);
-
-    sh_add[0][0] = rpool.create_register("sh_add[0][0]", 1);
-    sh_add[0][1] = rpool.create_register("sh_add[0][1]", 1);
-    sh_add[1][0] = rpool.create_register("sh_add[1][0]", 1);
-    sh_add[1][1] = rpool.create_register("sh_add[1][1]", 1);
-
-    sh_immediate[0][0] = rpool.create_register("sh_immediate[0][0]", 5);
-    sh_immediate[0][1] = rpool.create_register("sh_immediate[0][1]", 5);
-    sh_immediate[1][0] = rpool.create_register("sh_immediate[1][0]", 5);
-    sh_immediate[1][1] = rpool.create_register("sh_immediate[1][1]", 5);
+    BUILDM(sh_type, 2, 2, 2);
+    BUILDM(sh_amount_sel, 2, 2, 1);
+    BUILDM(sh_add, 2, 2, 1);
+    BUILDM(sh_immediate, 2, 3, 5);
 
     ra = rpool.create_register("ra", 5);
+    BUILDM(rb, 2, 2, 5);
+    BUILDM(rc, 2, 5, 5);
+    BUILDM(r_wren, 2, 4, 1);
+    BUILD(r_dst_sel, 2, 1);
+    BUILD(rb_31_sel, 2, 1);
 
-    rb[0][0] = rpool.create_register("rb[0][0]", 5);
-    rb[0][1] = rpool.create_register("rb[0][1]", 5);
-    rb[1][0] = rpool.create_register("rb[1][0]", 5);
-    rb[1][1] = rpool.create_register("rb[1][1]", 5);
+    BUILDM(p_wren, 2, 4, 1);
+    BUILDM(p_value, 2, 3, 1);
+    BUILDM(p_rvalue, 2, 2, 1);
+    BUILDM(p_register, 2, 2, 2);
 
-    rc[0][0] = rpool.create_register("rc[0][0]", 5);
-    rc[0][1] = rpool.create_register("rc[0][1]", 5);
-    rc[0][2] = rpool.create_register("rc[0][2]", 5);
-    rc[0][3] = rpool.create_register("rc[0][3]", 5);
-    rc[0][4] = rpool.create_register("rc[0][4]", 5);
-    rc[1][0] = rpool.create_register("rc[1][0]", 5);
-    rc[1][1] = rpool.create_register("rc[1][1]", 5);
-    rc[1][2] = rpool.create_register("rc[1][2]", 5);
-    rc[1][3] = rpool.create_register("rc[1][3]", 5);
-    rc[1][4] = rpool.create_register("rc[1][4]", 5);
+    BUILDM(m_wren, 2, 2, 1);
+    BUILDM(m_size, 2, 2, 2);
 
-    r_wren[0][0] = rpool.create_register("r_wren[0][0]", 1);
-    r_wren[0][1] = rpool.create_register("r_wren[0][1]", 1);
-    r_wren[0][2] = rpool.create_register("r_wren[0][2]", 1);
-    r_wren[0][3] = rpool.create_register("r_wren[0][3]", 1);
-    r_wren[1][0] = rpool.create_register("r_wren[1][0]", 1);
-    r_wren[1][1] = rpool.create_register("r_wren[1][1]", 1);
-    r_wren[1][2] = rpool.create_register("r_wren[1][2]", 1);
-    r_wren[1][3] = rpool.create_register("r_wren[1][3]", 1);
+    BUILDM(vra, 2, 2, 32);
+    BUILDM(vrb, 2, 2, 32);
+    BUILDM(immediate, 2, 3, 32);
 
-    r_dst_sel[0] = rpool.create_register("r_dst_sel[0]", 1);
-    r_dst_sel[1] = rpool.create_register("r_dst_sel[1]", 1);
-
-    rb_31_sel[0] = rpool.create_register("rb_31_sel[0]", 1);
-    rb_31_sel[1] = rpool.create_register("rb_31_sel[1]", 1);
-
-    p_wren[0][0] = rpool.create_register("p_wren[0][0]", 1);
-    p_wren[0][1] = rpool.create_register("p_wren[0][1]", 1);
-    p_wren[0][2] = rpool.create_register("p_wren[0][2]", 1);
-    p_wren[0][3] = rpool.create_register("p_wren[0][3]", 1);
-    p_wren[1][0] = rpool.create_register("p_wren[1][0]", 1);
-    p_wren[1][1] = rpool.create_register("p_wren[1][1]", 1);
-    p_wren[1][2] = rpool.create_register("p_wren[1][2]", 1);
-    p_wren[1][3] = rpool.create_register("p_wren[1][3]", 1);
-
-    p_value[0][0] = rpool.create_register("p_value[0][0]", 1);
-    p_value[0][1] = rpool.create_register("p_value[0][1]", 1);
-    p_value[0][2] = rpool.create_register("p_value[0][2]", 1);
-    p_value[1][0] = rpool.create_register("p_value[1][0]", 1);
-    p_value[1][1] = rpool.create_register("p_value[1][1]", 1);
-    p_value[1][2] = rpool.create_register("p_value[1][2]", 1);
-
-    // TODO
-
-    m_wren[0][0] = rpool.create_register("m_wren[0][0]", 1);
-    m_wren[0][1] = rpool.create_register("m_wren[0][1]", 1);
-    m_wren[1][0] = rpool.create_register("m_wren[1][0]", 1);
-    m_wren[1][1] = rpool.create_register("m_wren[1][1]", 1);
-
-    m_size[0][0] = rpool.create_register("m_size[0][0]", 2);
-    m_size[0][1] = rpool.create_register("m_size[0][1]", 2);
-    m_size[1][0] = rpool.create_register("m_size[1][0]", 2);
-    m_size[1][1] = rpool.create_register("m_size[1][1]", 2);
-
-    vra[0][0] = rpool.create_register("vra[0][0]", 32);
-    vra[0][1] = rpool.create_register("vra[0][1]", 32);
-
-    vra[1][0] = rpool.create_register("vra[1][0]", 32);
-    vra[1][1] = rpool.create_register("vra[1][1]", 32);
-
-    vrb[0][0] = rpool.create_register("vrb[0][0]", 32);
-    vrb[0][1] = rpool.create_register("vrb[0][1]", 32);
-
-    vrb[1][0] = rpool.create_register("vrb[1][0]", 32);
-    vrb[1][1] = rpool.create_register("vrb[1][1]", 32);
-
-    immediate[0][0] = rpool.create_register("immediate[0][0]", 32);
-    immediate[0][1] = rpool.create_register("immediate[0][1]", 32);
-    immediate[0][2] = rpool.create_register("immediate[0][2]", 32);
-    immediate[1][0] = rpool.create_register("immediate[1][0]", 32);
-    immediate[1][1] = rpool.create_register("immediate[1][1]", 32);
-    immediate[1][2] = rpool.create_register("immediate[1][2]", 32);
-
-    alu_res[0] = rpool.create_register("alu_res[0]", 32);
-    alu_res[1] = rpool.create_register("alu_res[1]", 32);
-
-    sh_res[0] = rpool.create_register("sh_res[0]", 32);
-    sh_res[1] = rpool.create_register("sh_res[1]", 32);
-
-    alu_sh_res[0] = rpool.create_register("alu_sh_res[0]", 32);
-    alu_sh_res[1] = rpool.create_register("alu_sh_res[1]", 32);
-
-    mem_res[0] = rpool.create_register("mem_res[0]", 32);
-    mem_res[1] = rpool.create_register("mem_res[1]", 32);
+    BUILD(alu_res, 2, 32);
+    BUILD(sh_res, 2, 32);
+    BUILD(alu_sh_res, 2, 32);
+    BUILD(mem_res, 2, 32);
 }

@@ -39,6 +39,10 @@ namespace HivekMultithreadEmulator {
             void generate_alu_sh_res_for_lane(int lane);
             void writeback_lane(int lane);
 
+            void read_registers_in_lane(int lane);
+            void calculate_next_rt_pc();
+            void calculate_next_nrt_pc();
+
         private:
             u32 alu(u32 op, u32 a, u32 b);
             u32 barrel_shifter(u32 shift_type, u32 a, u32 shift_ammount);
@@ -73,6 +77,17 @@ namespace HivekMultithreadEmulator {
 
         private:
             Register<u32>* ctrl_addr[N_LANES];
+            Register<u32>* primary_thread[2];
+            Register<u32>* pc[16];
+            Register<u32>* pcs[N_LANES][7];
+            Register<u64>* rt_instructions;
+            Register<u64>* nrt_instructions;
+            Register<u32>* threads[N_LANES][6];
+
+            Register<u32>* instructions[N_LANES];
+            Register<u32>* instruction_size[N_LANES][5];
+            Register<u32>* instruction_kind[N_LANES][3];
+            Register<u32>* instruction_rtk[5];
 
             Register<u32>* alu_op[N_LANES][2];
             Register<u32>* alu_pc_vra_sel[N_LANES][2];
@@ -101,18 +116,6 @@ namespace HivekMultithreadEmulator {
             Register<u32>* m_size[N_LANES][2];
 
         private:
-            Register<u32>* primary_thread[2];
-            Register<u32>* pc[16];
-            Register<u32>* pcs[N_LANES][7];
-            Register<u64>* rt_instructions;
-            Register<u64>* nrt_instructions;
-            Register<u32>* threads[N_LANES][6];
-
-            Register<u32>* instructions[N_LANES];
-            Register<u32>* instruction_size[N_LANES][5];
-            Register<u32>* instruction_kind[N_LANES][3];
-            Register<u32>* instruction_rtk[N_LANES][5];
-
             Register<u32>* vra[N_LANES][2];
             Register<u32>* vrb[N_LANES][2];
             Register<u32>* immediate[N_LANES][3];
