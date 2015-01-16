@@ -1,8 +1,7 @@
 all:
 	g++ src/RegisterPool.cpp \
+        src/VCDMonitor.cpp \
         src/RegisterFile.cpp \
-        src/ControlSignals.cpp \
-        src/DatapathSignals.cpp \
         src/Hivek.cpp \
         src/MemoryHierarchy.cpp \
         hts.cpp -o hts

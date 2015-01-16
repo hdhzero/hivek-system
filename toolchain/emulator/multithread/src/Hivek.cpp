@@ -7,6 +7,11 @@ void Hivek::reset() {
 
 void Hivek::cycle() {
     // TODO
+    fetch();
+    expand();
+    decode();
+    execute();
+    writeback();
 }
 
 void Hivek::update() {
@@ -27,30 +32,475 @@ void Hivek::expand() {
 
 void Hivek::decode() {
     // TODO
+    generate_controls_for_lane(0);
+    generate_controls_for_lane(1);
+    read_registers_in_lane(0);
+    read_registers_in_lane(1);
 }
 
 void Hivek::execute() {
     // TODO
+    generate_alu_res_for_lane(0);
+    generate_sh_res_for_lane(0);
+    generate_alu_sh_res_for_lane(0);
+    calculate_next_rt_pc();
+
+    generate_alu_res_for_lane(1);
+    generate_sh_res_for_lane(1);
+    generate_alu_sh_res_for_lane(1);
+    calculate_next_nrt_pc();
 }
 
 void Hivek::writeback() {
     // TODO
+    writeback_lane(0);
+    writeback_lane(1);
+}
+
+void Hivek::generate_controls_for_lane(int lane) {
+    ControlTable* ct;
+    u32 inst;
+
+    inst = instructions[lane]->read(); 
+    ctrl_addr[lane]->write(control_address(inst));
+    ct = &control_table[ctrl_addr[lane]->read()];
+
+    generate_alu_controls(lane, ct);
+    generate_sh_controls(lane, ct, inst);
+    generate_reg_controls(lane, ct, inst);
+    generate_pred_controls(lane, ct, inst);
+    // TODO
+}
+
+void Hivek::generate_alu_controls(int lane, ControlTable* ct) {
+    alu_op[lane][0]->write(ct->alu_op);
+    alu_op[lane][1]->write(alu_op[lane][0]->read());
+
+    alu_pc_vra_sel[lane][0]->write(ct->alu_pc_vra_sel);
+    alu_pc_vra_sel[lane][1]->write(alu_pc_vra_sel[lane][0]->read());
+
+    alu_vrb_immediate_sel[lane][0]->write(ct->alu_vrb_immediate_sel);
+    alu_vrb_immediate_sel[lane][1]->write(alu_vrb_immediate_sel[lane][0]->read());
+
+    alu_sh_sel[lane][0]->write(ct->alu_sh_sel);
+    alu_sh_sel[lane][1]->write(alu_sh_sel[lane][0]->read());
+    alu_sh_sel[lane][2]->write(alu_sh_sel[lane][1]->read());
+
+    alu_sh_mem_sel[lane][0]->write(ct->alu_sh_mem_sel);
+    alu_sh_mem_sel[lane][1]->write(alu_sh_mem_sel[lane][0]->read());
+    alu_sh_mem_sel[lane][2]->write(alu_sh_mem_sel[lane][1]->read());
+    alu_sh_mem_sel[lane][3]->write(alu_sh_mem_sel[lane][2]->read());
+}
+
+void Hivek::generate_sh_controls(int lane, ControlTable* ct, u32 inst) {
+    sh_type[lane][0]->write(ct->sh_type);
+    sh_type[lane][1]->write(sh_type[lane][0]->read());
+
+    sh_amount_sel[lane][0]->write(ct->sh_amount_sel);
+    sh_amount_sel[lane][1]->write(sh_amount_sel[lane][0]->read());
+
+    sh_add[lane][0]->write(ct->sh_add);
+    sh_add[lane][1]->write(sh_add[lane][0]->read());
+
+    sh_immediate[lane][0]->write(extract_sh_immediate(inst));
+    sh_immediate[lane][1]->write(sh_immediate[lane][0]->read());
+    sh_immediate[lane][2]->write(sh_immediate[lane][1]->read());
+}
+
+void Hivek::generate_reg_controls(int lane, ControlTable* ct, u32 inst) {
+    r_dst_sel[lane]->write(ct->r_dst_sel);
+    rb_31_sel[lane]->write(ct->rb_31_sel);
+
+    r_wren[lane][0]->write(ct->r_wren);
+    r_wren[lane][1]->write(r_wren[lane][0]->read());
+    r_wren[lane][2]->write(r_wren[lane][1]->read());
+    r_wren[lane][3]->write(r_wren[lane][2]->read());
+
+    rb[lane][0]->write(extract_rb(inst));
+    rb[lane][1]->write(rb[lane][0]->read());
+
+    if (lane == 1) {
+        ra->write(extract_ra(inst));
+    }
+   
+    rc[lane][0]->write(extract_rc(inst));
+    rc[lane][1]->write(rc[lane][0]->read());
+    rc[lane][2]->write(rc[lane][1]->read());
+    rc[lane][3]->write(rc[lane][2]->read());
+    rc[lane][4]->write(rc[lane][3]->read());
+
+    if (r_dst_sel[lane]->read()) {
+        if (rb_31_sel[lane]->read()) {
+            rc[lane][2]->write(31);
+        } else {
+            rc[lane][2]->write(rb[lane][1]->read());
+        }
+    }
+}
+
+void Hivek::generate_pred_controls(int lane, ControlTable* ct, u32 inst) {
+    p_wren[lane][0]->write(ct->p_wren);
+    p_wren[lane][1]->write(p_wren[lane][0]->read());
+    p_wren[lane][2]->write(p_wren[lane][1]->read());
+    p_wren[lane][3]->write(p_wren[lane][2]->read());
+
+    p_value[lane][0]->write(extract_predicate_value(inst));
+    p_value[lane][1]->write(p_value[lane][0]->read());
+    p_value[lane][2]->write(p_value[lane][1]->read());
+}
+
+void Hivek::generate_mem_controls(int lane, ControlTable* ct) {
+    m_wren[lane][0]->write(ct->m_wren);
+    m_wren[lane][1]->write(m_wren[lane][0]->read());
+
+    m_size[lane][0]->write(ct->m_size);
+    m_size[lane][1]->write(m_size[lane][0]->read());
+}
+
+u32 Hivek::control_address(u32 instruction) {
+    int tmp;
+
+    if (is_type_iii(instruction)) {
+        if (tmp = is_shadd(instruction)) {
+            switch (tmp) {
+                case OP_SLL:
+                    return 50;
+                case OP_SRL:
+                    return 51;
+                case OP_SRA:
+                    return 52;
+            }
+        } else {
+            return extract_op_from_type_iii(instruction) + 18;
+        }
+    } else if (is_type_i(instruction)) {
+        return extract_op_from_type_i(instruction) + 1;
+    } else if (is_type_iv(instruction)) {
+        return 53;
+    } else if (is_type_ii(instruction)) {
+        return 17;
+    }
+
+    return 0;
+}
+
+void Hivek::generate_alu_res_for_lane(int lane) {
+    u32 aluOp;
+    u32 op_a;
+    u32 op_b;
+
+    aluOp = alu_op[lane][1]->read();
+
+    if (alu_pc_vra_sel[lane][1]->read()) {
+        op_a = pcs[lane][5]->read();
+    } else {
+        op_b = vra[lane][1]->read();
+    }
+
+    if (alu_vrb_immediate_sel[lane][1]->read()) {
+        op_b = immediate[lane][2]->read();
+    } else {
+        op_b = vrb[lane][1]->read();
+    }
+
+    alu_res[lane]->write(alu(aluOp, op_a, op_b));
+}
+
+void Hivek::generate_sh_res_for_lane(int lane) {
+    u32 sh_t;
+    u32 sh_i;
+    u32 va;
+    u32 vb;
+    u32 res;
+
+    sh_t = sh_type[lane][1]->read();
+    va   = vra[lane][1]->read();
+    vb   = vrb[lane][1]->read();
+
+    if (sh_amount_sel[lane][1]->read()) {
+        sh_i = vrb[lane][1]->read() & 0x01F;
+    } else {
+        sh_i = sh_immediate[lane][2]->read();
+    }
+
+    res  = barrel_shifter(sh_t, va, sh_i);
+
+    if (sh_add[lane][1]->read()) {
+        res += vb;
+    }
+
+    sh_res[lane]->write(res);
+}
+
+void Hivek::generate_alu_sh_res_for_lane(int lane) {
+    if (alu_sh_sel[lane][2]->read()) {
+        alu_sh_res[lane]->write(sh_res[lane]->read());
+    } else {
+        alu_sh_res[lane]->write(alu_res[lane]->read());
+    }
+}
+
+void Hivek::writeback_lane(int lane) {
+    u32 thread = this->threads[lane][5]->read();
+    u32 wren   = this->r_wren[lane][3]->read();
+    u32 rc     = this->rc[lane][4]->read();
+    u32 vrc;
+
+    if (alu_sh_mem_sel[lane][3]->read()) {
+        vrc = mem_res[lane]->read();
+    } else {
+        vrc = alu_sh_res[lane]->read();
+    }
+   
+    regfile.write(lane, thread, wren, rc, vrc);
+}
+
+
+u32 Hivek::alu(u32 op, u32 a, u32 b) {
+    switch (op) {
+        case ALU_ADD:
+            return a + b;
+
+        case ALU_SUB:
+            return a - b;
+
+        case ALU_AND:
+            return a & b;
+
+        case ALU_OR:
+            return a | b;
+
+        case ALU_NOR:
+            return ~(a | b);
+
+        case ALU_XOR:
+            return a ^ b;
+    }
+
+    return 0;
+}
+
+u32 Hivek::barrel_shifter(u32 shift_type, u32 a, u32 shift_ammount) {
+    switch (shift_type) {
+        case BARREL_SLL:
+            return a << shift_ammount;
+
+        case BARREL_SRL:
+            return a >> shift_ammount;
+
+        case BARREL_SRA:
+            return ((i32) a) >> shift_ammount;
+    }
+}
+
+u32 Hivek::extract_predicate_value(u32 instruction) {
+    return (instruction & 0x04) >> 2;
+}
+
+u32 Hivek::extract_predicate_register(u32 instruction) {
+    return instruction & 0x03;
+}
+
+u32 Hivek::extract_ra(u32 instruction) {
+    return (instruction >> 3) & 0x01F;
+}
+
+u32 Hivek::extract_rb(u32 instruction) {
+    return (instruction >> 8) & 0x01F;
+}
+
+u32 Hivek::extract_rc(u32 instruction) {
+    return (instruction >> 13) & 0x01F;
+}
+
+u32 Hivek::extract_sh_immediate(u32 instruction) {
+    return (instruction >> 23) & 0x01F;
+}
+
+u32 Hivek::extract_op_from_type_i(u32 instruction) {
+    return (instruction >> 23) & 0x0F;
+}
+
+u32 Hivek::extract_op_from_type_iii(u32 instruction) {
+    return (instruction >> 18) & 0x01F;
+}
+
+bool Hivek::is_type_i(u32 instruction) {
+    return (instruction & TYPE_I_MASK) == TYPE_I_MASK;
+}
+
+bool Hivek::is_type_ii(u32 instruction) {
+    return (instruction & TYPE_II_MASK) == TYPE_II_MASK;
+}
+
+bool Hivek::is_type_iii(u32 instruction) {
+    return (instruction & TYPE_III_MASK) == TYPE_III_MASK;
+}
+
+bool Hivek::is_type_iv(u32 instruction) {
+    return (instruction & TYPE_IV_MASK) == TYPE_IV_MASK;
+}
+
+bool Hivek::is_type_v(u32 instruction) {
+    return (instruction & TYPE_V_MASK) == TYPE_V_MASK;
+}
+
+int Hivek::is_shadd(u32 instruction) {
+    return (instruction >> 23) & 0x03;
+}
+
+void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
+
 }
 
 Hivek::Hivek() {
     // TODO
     regfile.set_rpool(&rpool);
-
-    ctrl.set_rpool(&rpool);
-    ctrl.set_regfile(&regfile);
-    ctrl.set_dpath(&dpath);
-
-    dpath.set_ctrl(&ctrl);
-    dpath.set_rpool(&rpool);
-    dpath.set_regfile(&regfile);
-    dpath.set_mem(mem);
-
-    ctrl.init();
-    dpath.init();
     regfile.init();
+
+    ctrl_addr[0] = rpool.create_register("ctrl_addr[0]", 8);
+    ctrl_addr[1] = rpool.create_register("ctrl_addr[1]", 8);
+
+    alu_op[0][0] = rpool.create_register("alu_op[0][0]", 4);
+    alu_op[0][1] = rpool.create_register("alu_op[0][1]", 4);
+    alu_op[1][0] = rpool.create_register("alu_op[1][0]", 4);
+    alu_op[1][1] = rpool.create_register("alu_op[1][1]", 4);
+
+    alu_pc_vra_sel[0][0] = rpool.create_register("alu_pc_vra_sel[0][0]", 1);
+    alu_pc_vra_sel[0][1] = rpool.create_register("alu_pc_vra_sel[0][1]", 1);
+    alu_pc_vra_sel[1][0] = rpool.create_register("alu_pc_vra_sel[1][0]", 1);
+    alu_pc_vra_sel[1][1] = rpool.create_register("alu_pc_vra_sel[1][1]", 1);
+
+    alu_vrb_immediate_sel[0][0] = rpool.create_register("alu_vrb_immediate_sel[0][0]", 1);
+    alu_vrb_immediate_sel[0][1] = rpool.create_register("alu_vrb_immediate_sel[0][1]", 1);
+    alu_vrb_immediate_sel[1][0] = rpool.create_register("alu_vrb_immediate_sel[1][0]", 1);
+    alu_vrb_immediate_sel[1][1] = rpool.create_register("alu_vrb_immediate_sel[1][1]", 1);
+
+    alu_sh_sel[0][0] = rpool.create_register("alu_sh_sel[0][0]", 1);
+    alu_sh_sel[0][1] = rpool.create_register("alu_sh_sel[0][1]", 1);
+    alu_sh_sel[0][2] = rpool.create_register("alu_sh_sel[0][2]", 1);
+    alu_sh_sel[1][0] = rpool.create_register("alu_sh_sel[1][0]", 1);
+    alu_sh_sel[1][1] = rpool.create_register("alu_sh_sel[1][1]", 1);
+    alu_sh_sel[1][2] = rpool.create_register("alu_sh_sel[1][2]", 1);
+
+    alu_sh_mem_sel[0][0] = rpool.create_register("alu_sh_mem_sel[0][0]", 1);
+    alu_sh_mem_sel[0][1] = rpool.create_register("alu_sh_mem_sel[0][1]", 1);
+    alu_sh_mem_sel[0][2] = rpool.create_register("alu_sh_mem_sel[0][2]", 1);
+    alu_sh_mem_sel[0][3] = rpool.create_register("alu_sh_mem_sel[0][3]", 1);
+    alu_sh_mem_sel[1][0] = rpool.create_register("alu_sh_mem_sel[1][0]", 1);
+    alu_sh_mem_sel[1][1] = rpool.create_register("alu_sh_mem_sel[1][1]", 1);
+    alu_sh_mem_sel[1][2] = rpool.create_register("alu_sh_mem_sel[1][2]", 1);
+    alu_sh_mem_sel[1][3] = rpool.create_register("alu_sh_mem_sel[1][3]", 1);
+
+    sh_type[0][0] = rpool.create_register("sh_type[0][0]", 2);
+    sh_type[0][1] = rpool.create_register("sh_type[0][1]", 2);
+    sh_type[1][0] = rpool.create_register("sh_type[1][0]", 2);
+    sh_type[1][1] = rpool.create_register("sh_type[1][1]", 2);
+
+    sh_amount_sel[0][0] = rpool.create_register("sh_amount_sel[0][0]", 1);
+    sh_amount_sel[0][1] = rpool.create_register("sh_amount_sel[0][1]", 1);
+    sh_amount_sel[1][0] = rpool.create_register("sh_amount_sel[1][0]", 1);
+    sh_amount_sel[1][1] = rpool.create_register("sh_amount_sel[1][1]", 1);
+
+    sh_add[0][0] = rpool.create_register("sh_add[0][0]", 1);
+    sh_add[0][1] = rpool.create_register("sh_add[0][1]", 1);
+    sh_add[1][0] = rpool.create_register("sh_add[1][0]", 1);
+    sh_add[1][1] = rpool.create_register("sh_add[1][1]", 1);
+
+    sh_immediate[0][0] = rpool.create_register("sh_immediate[0][0]", 5);
+    sh_immediate[0][1] = rpool.create_register("sh_immediate[0][1]", 5);
+    sh_immediate[1][0] = rpool.create_register("sh_immediate[1][0]", 5);
+    sh_immediate[1][1] = rpool.create_register("sh_immediate[1][1]", 5);
+
+    ra = rpool.create_register("ra", 5);
+
+    rb[0][0] = rpool.create_register("rb[0][0]", 5);
+    rb[0][1] = rpool.create_register("rb[0][1]", 5);
+    rb[1][0] = rpool.create_register("rb[1][0]", 5);
+    rb[1][1] = rpool.create_register("rb[1][1]", 5);
+
+    rc[0][0] = rpool.create_register("rc[0][0]", 5);
+    rc[0][1] = rpool.create_register("rc[0][1]", 5);
+    rc[0][2] = rpool.create_register("rc[0][2]", 5);
+    rc[0][3] = rpool.create_register("rc[0][3]", 5);
+    rc[0][4] = rpool.create_register("rc[0][4]", 5);
+    rc[1][0] = rpool.create_register("rc[1][0]", 5);
+    rc[1][1] = rpool.create_register("rc[1][1]", 5);
+    rc[1][2] = rpool.create_register("rc[1][2]", 5);
+    rc[1][3] = rpool.create_register("rc[1][3]", 5);
+    rc[1][4] = rpool.create_register("rc[1][4]", 5);
+
+    r_wren[0][0] = rpool.create_register("r_wren[0][0]", 1);
+    r_wren[0][1] = rpool.create_register("r_wren[0][1]", 1);
+    r_wren[0][2] = rpool.create_register("r_wren[0][2]", 1);
+    r_wren[0][3] = rpool.create_register("r_wren[0][3]", 1);
+    r_wren[1][0] = rpool.create_register("r_wren[1][0]", 1);
+    r_wren[1][1] = rpool.create_register("r_wren[1][1]", 1);
+    r_wren[1][2] = rpool.create_register("r_wren[1][2]", 1);
+    r_wren[1][3] = rpool.create_register("r_wren[1][3]", 1);
+
+    r_dst_sel[0] = rpool.create_register("r_dst_sel[0]", 1);
+    r_dst_sel[1] = rpool.create_register("r_dst_sel[1]", 1);
+
+    rb_31_sel[0] = rpool.create_register("rb_31_sel[0]", 1);
+    rb_31_sel[1] = rpool.create_register("rb_31_sel[1]", 1);
+
+    p_wren[0][0] = rpool.create_register("p_wren[0][0]", 1);
+    p_wren[0][1] = rpool.create_register("p_wren[0][1]", 1);
+    p_wren[0][2] = rpool.create_register("p_wren[0][2]", 1);
+    p_wren[0][3] = rpool.create_register("p_wren[0][3]", 1);
+    p_wren[1][0] = rpool.create_register("p_wren[1][0]", 1);
+    p_wren[1][1] = rpool.create_register("p_wren[1][1]", 1);
+    p_wren[1][2] = rpool.create_register("p_wren[1][2]", 1);
+    p_wren[1][3] = rpool.create_register("p_wren[1][3]", 1);
+
+    p_value[0][0] = rpool.create_register("p_value[0][0]", 1);
+    p_value[0][1] = rpool.create_register("p_value[0][1]", 1);
+    p_value[0][2] = rpool.create_register("p_value[0][2]", 1);
+    p_value[1][0] = rpool.create_register("p_value[1][0]", 1);
+    p_value[1][1] = rpool.create_register("p_value[1][1]", 1);
+    p_value[1][2] = rpool.create_register("p_value[1][2]", 1);
+
+    // TODO
+
+    m_wren[0][0] = rpool.create_register("m_wren[0][0]", 1);
+    m_wren[0][1] = rpool.create_register("m_wren[0][1]", 1);
+    m_wren[1][0] = rpool.create_register("m_wren[1][0]", 1);
+    m_wren[1][1] = rpool.create_register("m_wren[1][1]", 1);
+
+    m_size[0][0] = rpool.create_register("m_size[0][0]", 2);
+    m_size[0][1] = rpool.create_register("m_size[0][1]", 2);
+    m_size[1][0] = rpool.create_register("m_size[1][0]", 2);
+    m_size[1][1] = rpool.create_register("m_size[1][1]", 2);
+
+    vra[0][0] = rpool.create_register("vra[0][0]", 32);
+    vra[0][1] = rpool.create_register("vra[0][1]", 32);
+
+    vra[1][0] = rpool.create_register("vra[1][0]", 32);
+    vra[1][1] = rpool.create_register("vra[1][1]", 32);
+
+    vrb[0][0] = rpool.create_register("vrb[0][0]", 32);
+    vrb[0][1] = rpool.create_register("vrb[0][1]", 32);
+
+    vrb[1][0] = rpool.create_register("vrb[1][0]", 32);
+    vrb[1][1] = rpool.create_register("vrb[1][1]", 32);
+
+    immediate[0][0] = rpool.create_register("immediate[0][0]", 32);
+    immediate[0][1] = rpool.create_register("immediate[0][1]", 32);
+    immediate[0][2] = rpool.create_register("immediate[0][2]", 32);
+    immediate[1][0] = rpool.create_register("immediate[1][0]", 32);
+    immediate[1][1] = rpool.create_register("immediate[1][1]", 32);
+    immediate[1][2] = rpool.create_register("immediate[1][2]", 32);
+
+    alu_res[0] = rpool.create_register("alu_res[0]", 32);
+    alu_res[1] = rpool.create_register("alu_res[1]", 32);
+
+    sh_res[0] = rpool.create_register("sh_res[0]", 32);
+    sh_res[1] = rpool.create_register("sh_res[1]", 32);
+
+    alu_sh_res[0] = rpool.create_register("alu_sh_res[0]", 32);
+    alu_sh_res[1] = rpool.create_register("alu_sh_res[1]", 32);
+
+    mem_res[0] = rpool.create_register("mem_res[0]", 32);
+    mem_res[1] = rpool.create_register("mem_res[1]", 32);
 }
