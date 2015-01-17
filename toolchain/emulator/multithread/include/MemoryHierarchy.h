@@ -3,18 +3,31 @@
 
 #include <vector>
 #include <fstream>
+#include "Defines.h"
+#include "Register.h"
+#include "RegisterPool.h"
 
 namespace HivekMultithreadEmulator {
     class MemoryHierarchy {
+        public:
+            MemoryHierarchy();
+
         public:
             void reset();
             void cycle();
             void update();
 
         public:
+            u64 iread64(int lane, u32 address, bool hits[8]);
+
+        public:
             void read_contents_from_file(char* filename);
 
         private:
+            Register<u32>* i_address[N_LANES];
+
+        private:
+            RegisterPool rpool;
             std::vector<char> ram;
     };
 }

@@ -7,26 +7,38 @@ void RegisterFile::set_rpool(RegisterPool* rpool) {
 }
 
 void RegisterFile::init() {
-    ra[0] = rpool->create_register("regfile:ra[0]", 5);
-    ra[1] = rpool->create_register("regfile:ra[1]", 5);
+    ra[0] = rpool->create_register("regfile:ra{0}", 5);
+    ra[1] = rpool->create_register("regfile:ra{1}", 5);
 
-    rb[0] = rpool->create_register("regfile:rb[0]", 5);
-    rb[1] = rpool->create_register("regfile:rb[1]", 5);
+    rb[0] = rpool->create_register("regfile:rb{0}", 5);
+    rb[1] = rpool->create_register("regfile:rb{1}", 5);
 
-    rc[0] = rpool->create_register("regfile:rc[0]", 5);
-    rc[1] = rpool->create_register("regfile:rc[1]", 5);
+    rc[0] = rpool->create_register("regfile:rc{0}", 5);
+    rc[1] = rpool->create_register("regfile:rc{1}", 5);
 
-    vrc[0] = rpool->create_register("regfile:vrc[0]", 32);
-    vrc[1] = rpool->create_register("regfile:vrc[1]", 32);
+    vrc[0] = rpool->create_register("regfile:vrc{0}", 32);
+    vrc[1] = rpool->create_register("regfile:vrc{1}", 32);
 
-    wren[0] = rpool->create_register("regfile:wren[0]", 1);
-    wren[1] = rpool->create_register("regfile:wren[1]", 1);
+    wren[0] = rpool->create_register("regfile:wren{0}", 1);
+    wren[1] = rpool->create_register("regfile:wren{1}", 1);
 
-    thread_r[0] = rpool->create_register("regfile:thread_r[0]", 5);
-    thread_r[1] = rpool->create_register("regfile:thread_r[1]", 5);
+    thread_r[0] = rpool->create_register("regfile:thread_r{0}", 5);
+    thread_r[1] = rpool->create_register("regfile:thread_r{1}", 5);
 
-    thread_w[0] = rpool->create_register("regfile:thread_w[0]", 5);
-    thread_w[1] = rpool->create_register("regfile:thread_w[1]", 5);
+    thread_w[0] = rpool->create_register("regfile:thread_w{0}", 5);
+    thread_w[1] = rpool->create_register("regfile:thread_w{1}", 5);
+
+    pr_r[0] = rpool->create_register("regfile:pr_r{0}", 2);
+    pr_r[1] = rpool->create_register("regfile:pr_r{1}", 2);
+    
+    pr_w[0] = rpool->create_register("regfile:pr_w{0}", 2);
+    pr_w[1] = rpool->create_register("regfile:pr_w{1}", 2);
+
+    pr_v[0] = rpool->create_register("regfile:pr_v{0}", 2);
+    pr_v[1] = rpool->create_register("regfile:pr_v{1}", 2);
+
+    pr_wren[0] = rpool->create_register("regfile:pr_wren{0}", 2);
+    pr_wren[1] = rpool->create_register("regfile:pr_wren{1}", 2);
 
     for (int i = 0; i < 16; ++i) {
         registers[i][0] = 0;

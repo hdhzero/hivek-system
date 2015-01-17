@@ -24,11 +24,52 @@ void Hivek::set_memory_hierarchy(MemoryHierarchy* ptr) {
 }
 
 void Hivek::fetch() {
-    // TODO
+    u32 tmp;
+    u32 rt_addr;
+    u32 nrt_addr;
+    u64 inst;
+    bool rt_hits[8];
+    bool nrt_hits[8];
+
+    tmp = primary_thread[0]->read();
+    primary_thread[1]->write(tmp);
+    tmp = tmp == 7 ? 0 : tmp + 1;
+    primary_thread[0]->write(tmp);
+
+    rt_addr  = pc[tmp]->read();
+    nrt_addr = pc[tmp + 8]->read();
+
+    pcs[0][0]->write(rt_addr);
+    pcs[1][0]->write(nrt_addr);
+
+    for (int i = 0; i < 6; ++i) {
+        pcs[0][i + 1]->write(pcs[0][i]->read());
+        pcs[1][i + 1]->write(pcs[1][i]->read());
+    }
+
+    inst = mem->iread64(0, rt_addr, rt_hits);
+    rt_instructions->write(inst);
+
+    inst = mem->iread64(1, nrt_addr, nrt_hits);
+    nrt_instructions->write(inst);
 }
 
 void Hivek::expand() {
+    /*if (din.rt_locked.read() && din.nrt_locked.read()) {
+        instruction[0]->write(0);
+        instruction[1]->write(0);
+        rt_nrt[0]->write(0);
+        rt_nrt[1]->write(0);
+    } else if (din.rt_locked.read()) {
+        get_instructions_from_nrt();
+    } else {
+        get_instructions_from_rt();
+    }*/
+
+    get_instructions_from_rt();
     generate_threads();
+    generate_instruction_sizes();
+    generate_rtks();
 }
 
 void Hivek::decode() {
@@ -62,6 +103,32 @@ void Hivek::calculate_next_rt_pc() {
 
 void Hivek::calculate_next_nrt_pc() {
     // TODO
+}
+
+void Hivek::get_instructions_from_rt() {
+    int size;
+    u32 tmp;
+    u32 pthread = primary_thread[1]->read();
+
+    tmp = get_first_instruction(rt_instructions->read(), size);
+    threads[0][0]->write(pthread);
+
+    instructions[0]->write(tmp);
+    instruction_size[0][0]->write(encode_instruction_size(size));
+
+    if (parallel(rt_instructions->read())) {
+        tmp = get_second_instruction(rt_instructions->read(), size);
+        threads[1][0]->write(pthread);
+        instructions[1]->write(tmp);
+        instruction_size[1][0]->write(encode_instruction_size(size));
+        instruction_rtk[0]->write(RTK_RT_RT);
+    } else {
+        tmp = get_first_instruction(nrt_instructions->read(), size);
+        threads[1][0]->write(pthread + 8);
+        instructions[1]->write(tmp);
+        instruction_size[1][0]->write(encode_instruction_size(size));
+        instruction_rtk[0]->write(RTK_RT_NRT);
+    }
 }
 
 void Hivek::read_registers_in_lane(int lane) {
@@ -107,8 +174,12 @@ void Hivek::generate_controls_for_lane(int lane) {
     generate_sh_controls(lane, ct, inst);
     generate_reg_controls(lane, ct, inst);
     generate_pred_controls(lane, ct, inst);
+    generate_mem_controls(lane, ct);
     generate_immediates(lane, inst);
-    // TODO
+
+    instruction_kind[lane][0]->write(ct->instruction_kind);
+    instruction_kind[lane][1]->write(instruction_kind[lane][0]->read());
+    instruction_kind[lane][2]->write(instruction_kind[lane][1]->read());
 }
 
 void Hivek::generate_threads() {
@@ -140,7 +211,7 @@ void Hivek::generate_immediates(int lane, u32 inst) {
         tmp = extract_immd_from_type_i(inst);
 
         if (tmp & 0x200) {
-            tmp = 0x0FFFFFc00 | tmp;
+            tmp = 0x0FFFFFC00 | tmp;
         }
     } else if (is_type_ii(inst)) {
         tmp = extract_immd_from_type_ii(inst);
@@ -448,6 +519,79 @@ bool Hivek::is_type_v(u32 instruction) {
 
 int Hivek::is_shadd(u32 instruction) {
     return (instruction >> 23) & 0x03;
+}
+
+bool Hivek::parallel(u64 instructions) {
+    return (instructions >> 63) == 1;
+}
+
+u32 Hivek::expand24(u32 instruction) {
+    return 0;
+}
+
+u32 Hivek::expand16(u32 instruction) {
+    return 0;
+}
+
+u32 Hivek::encode_instruction_size(u32 size) {
+    switch (size) {
+    case 16:
+        return SZ_16;
+
+    case 24:
+        return SZ_24;
+
+    case 32:
+        return SZ_32;
+
+    case 64:
+        return SZ_64;
+    }
+}
+
+u32 Hivek::decode_instruction_size(u32 size) {
+    switch (size) {
+    case SZ_16:
+        return 2;
+
+    case SZ_24:
+        return 3;
+
+    case SZ_32:
+        return 4;
+
+    case SZ_64:
+        return 8;
+    }
+}
+
+u32 Hivek::get_first_instruction(u64 instructions, int& size) {
+    u32 tmp;
+    bool flag; 
+
+    tmp = instructions >> 32;
+    flag = is_type_i(tmp) || is_type_ii(tmp) || is_type_iv(tmp) || is_type_iii(tmp);
+
+    if (flag) {
+        size = 32;
+        return tmp;
+    } else {
+        tmp = instructions >> 40;
+        flag = is_type_v(tmp); 
+
+        if (flag) {
+            size = 24;
+            return expand24(tmp);
+        } else {
+            tmp = instructions >> 48;
+            size = 16;
+            return expand16(tmp);
+        }
+    }
+}
+
+u32 Hivek::get_second_instruction(u64 instructions, int& size) {
+    return get_first_instruction(instructions << size, size);
 }
 
 void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {

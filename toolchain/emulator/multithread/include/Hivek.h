@@ -27,6 +27,7 @@ namespace HivekMultithreadEmulator {
             void writeback();
 
         private:
+            void get_instructions_from_rt();
             void generate_threads();
             void generate_instruction_sizes();
             void generate_rtks();
@@ -73,7 +74,14 @@ namespace HivekMultithreadEmulator {
             bool is_type_iii(u32 instruction); 
             bool is_type_iv(u32 instruction);
             bool is_type_v(u32 instruction);
+            bool parallel(u64 instruction);
             int is_shadd(u32 instruction);
+            u32 get_first_instruction(u64 instruction, int& size);
+            u32 get_second_instruction(u64 instruction, int& size);
+            u32 expand16(u32 instruction);
+            u32 expand24(u32 instruction);
+            u32 encode_instruction_size(u32 size);
+            u32 decode_instruction_size(u32 size);
 
         private:
             RegisterPool rpool;
