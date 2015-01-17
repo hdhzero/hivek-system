@@ -27,6 +27,11 @@ namespace HivekMultithreadEmulator {
             void writeback();
 
         private:
+            void generate_threads();
+            void generate_instruction_sizes();
+            void generate_rtks();
+            void generate_immediates(int lane, u32 inst);
+
             void generate_controls_for_lane(int lane);
             void generate_alu_controls(int lane, ControlTable* ct);
             void generate_sh_controls(int lane, ControlTable* ct, u32 inst);
@@ -59,6 +64,8 @@ namespace HivekMultithreadEmulator {
             u32 extract_predicate_register(u32 instruction);
             u32 extract_sh_immd(u32 instruction);
             u32 extract_immd_from_type_i(u32 instruction);
+            u32 extract_immd_from_type_ii(u32 instruction);
+            u32 extract_immd_from_type_iv(u32 instruction);
 
             bool mask(u32 v, u32 m);
             bool is_type_i(u32 instruction);

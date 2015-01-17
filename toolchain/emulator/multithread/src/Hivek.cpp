@@ -4,11 +4,10 @@
 using namespace HivekMultithreadEmulator;
 
 void Hivek::reset() {
-    // TODO
+    rpool.reset();
 }
 
 void Hivek::cycle() {
-    // TODO
     fetch();
     expand();
     decode();
@@ -17,7 +16,7 @@ void Hivek::cycle() {
 }
 
 void Hivek::update() {
-    // TODO
+    rpool.update();
 }
 
 void Hivek::set_memory_hierarchy(MemoryHierarchy* ptr) {
@@ -29,11 +28,10 @@ void Hivek::fetch() {
 }
 
 void Hivek::expand() {
-    // TODO
+    generate_threads();
 }
 
 void Hivek::decode() {
-    // TODO
     generate_controls_for_lane(0);
     generate_controls_for_lane(1);
     read_registers_in_lane(0);
@@ -41,7 +39,6 @@ void Hivek::decode() {
 }
 
 void Hivek::execute() {
-    // TODO
     generate_alu_res_for_lane(0);
     generate_sh_res_for_lane(0);
     generate_alu_sh_res_for_lane(0);
@@ -68,7 +65,34 @@ void Hivek::calculate_next_nrt_pc() {
 }
 
 void Hivek::read_registers_in_lane(int lane) {
-    // TODO
+    u32 inst = instructions[lane]->read();
+    u32 th;
+    u32 ra;
+    u32 rb;
+    u32 pr;
+
+    if (lane == 0) {
+        th = this->threads[lane][0]->read();
+        ra = extract_ra(inst);
+        rb = extract_rb(inst);
+
+        vra[lane][0]->write(regfile.read_ra(lane, th, ra));
+        vrb[lane][0]->write(regfile.read_rb(lane, th, rb));
+
+        vra[lane][1]->write(vra[lane][0]->read());       
+        vrb[lane][1]->write(vrb[lane][0]->read());
+
+        pr = extract_predicate_register(inst);
+        p_rvalue[lane][0]->write(regfile.read_pr(lane, pr));
+        p_rvalue[lane][1]->write(p_rvalue[lane][0]->read());
+    } else {
+        th = this->threads[lane][1]->read();
+        ra = this->ra->read();
+        rb = this->rb[lane][0]->read();
+
+        vra[lane][1]->write(regfile.read_ra(lane, th, ra));
+        vrb[lane][1]->write(regfile.read_rb(lane, th, rb));
+    }
 }
 
 void Hivek::generate_controls_for_lane(int lane) {
@@ -83,7 +107,58 @@ void Hivek::generate_controls_for_lane(int lane) {
     generate_sh_controls(lane, ct, inst);
     generate_reg_controls(lane, ct, inst);
     generate_pred_controls(lane, ct, inst);
+    generate_immediates(lane, inst);
     // TODO
+}
+
+void Hivek::generate_threads() {
+    for (int lane = 0; lane < N_LANES; ++lane) {
+        for (int i = 0; i < 5; ++i) {
+            threads[lane][i + 1]->write(threads[lane][i]->read());
+        }
+    }
+}
+
+void Hivek::generate_instruction_sizes() {
+    for (int lane = 0; lane < N_LANES; ++lane) {
+        for (int i = 0; i < 4; ++i) {
+            instruction_size[lane][i + 1]->write(instruction_size[lane][i]->read());
+        }
+    }
+}
+
+void Hivek::generate_rtks() {
+    for (int i = 0; i < 4; ++i) {
+        instruction_rtk[i + 1]->write(instruction_rtk[i]->read());
+    }
+}
+
+void Hivek::generate_immediates(int lane, u32 inst) {
+    u32 tmp = 0;
+
+    if (is_type_i(inst)) {
+        tmp = extract_immd_from_type_i(inst);
+
+        if (tmp & 0x200) {
+            tmp = 0x0FFFFFc00 | tmp;
+        }
+    } else if (is_type_ii(inst)) {
+        tmp = extract_immd_from_type_ii(inst);
+
+        if (tmp & 0x01000000) {
+            tmp = 0x0FE000000 | tmp;
+        }
+    } else if (is_type_iv(inst)) {
+        tmp = extract_immd_from_type_iv(inst);
+
+        if (tmp & 0x08000) {
+            tmp = 0x0FFFF0000 | tmp;
+        }
+    }
+
+    immediate[lane][0]->write(tmp);
+    immediate[lane][1]->write(immediate[lane][0]->read());
+    immediate[lane][2]->write(immediate[lane][1]->read());
 }
 
 void Hivek::generate_alu_controls(int lane, ControlTable* ct) {
@@ -339,6 +414,18 @@ u32 Hivek::extract_op_from_type_iii(u32 instruction) {
     return (instruction >> 18) & 0x01F;
 }
 
+u32 Hivek::extract_immd_from_type_i(u32 instruction) {
+    return (instruction >> 13) & 0x3FF;
+}
+
+u32 Hivek::extract_immd_from_type_ii(u32 instruction) {
+    return instruction & 0x01FFFFFF;
+}
+
+u32 Hivek::extract_immd_from_type_iv(u32 instruction) {
+    return (instruction >> 3) & 0x0FFFF;
+}
+
 bool Hivek::is_type_i(u32 instruction) {
     return (instruction & TYPE_I_MASK) == TYPE_I_MASK;
 }
@@ -366,8 +453,6 @@ int Hivek::is_shadd(u32 instruction) {
 void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(ctrl_addr[0]);
     ptr->add_register(alu_op[0][0]);
-std::cout << ctrl_addr[0]->name << '\n';
-std::cout << alu_op[0][0]->name << '\n';
 }
 
 Hivek::Hivek() {

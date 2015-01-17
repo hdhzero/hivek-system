@@ -49,6 +49,23 @@ void RegisterFile::write(int lane, u32 thread, u32 wren, u32 rc, u32 vrc) {
     }
 }
 
+void RegisterFile::write_pr(int lane, u32 wren, u32 pr, u32 prv) {
+    u32 th;
+
+    this->pr_wren[lane]->write(wren);
+    this->pr_w[lane]->write(pr);
+    this->pr_v[lane]->write(prv);
+
+    th   = this->thread_w[lane]->read();
+    wren = this->pr_wren[lane]->read();
+    pr   = this->pr_w[lane]->read();
+    prv  = this->pr_v[lane]->read();
+
+    if (pr != 0 && wren) {
+        pr_registers[th][pr] = prv;
+    }
+}
+
 u32 RegisterFile::read_ra(int lane, u32 thread, u32 ra) {
     this->ra[lane]->write(ra);
     this->thread_r[lane]->write(thread);
@@ -61,6 +78,15 @@ u32 RegisterFile::read_rb(int lane, u32 thread, u32 rb) {
     this->thread_r[lane]->write(thread);
 
     return get_vrb(lane);
+}
+
+u32 RegisterFile::read_pr(int lane, u32 pr) {
+    u32 pr_r = this->pr_r[lane]->read();
+    u32 th   = this->thread_r[lane]->read();
+
+    this->pr_r[lane]->write(pr);
+
+    return pr_registers[th][pr_r];
 }
 
 u32 RegisterFile::get_vra(int lane) {
