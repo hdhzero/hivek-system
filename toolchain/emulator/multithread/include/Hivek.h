@@ -28,6 +28,7 @@ namespace HivekMultithreadEmulator {
 
         private:
             void get_instructions_from_rt();
+            void get_instructions_from_nrt();
             void generate_threads();
             void generate_instruction_sizes();
             void generate_rtks();

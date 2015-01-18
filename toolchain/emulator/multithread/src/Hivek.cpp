@@ -131,6 +131,25 @@ void Hivek::get_instructions_from_rt() {
     }
 }
 
+void Hivek::get_instructions_from_nrt() {
+    int size;
+    u32 tmp;
+    u32 pthread = primary_thread[1]->read() + 8;
+
+    threads[0][0]->write(pthread);
+    threads[1][0]->write(pthread);
+
+    tmp = get_first_instruction(nrt_instructions->read(), size);
+    instructions[0]->write(tmp);
+
+    if (parallel(nrt_instructions->read())) {
+        tmp = get_second_instruction(nrt_instructions->read(), size);
+        instructions[1]->write(tmp);
+    } else {
+        instructions[1]->write(0);
+    }
+}
+
 void Hivek::read_registers_in_lane(int lane) {
     u32 inst = instructions[lane]->read();
     u32 th;
