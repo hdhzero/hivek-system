@@ -95,8 +95,8 @@ u64 MemoryHierarchy::iread64(int lane, u32 address, bool hits[8]) {
     address = i_address[lane]->read();
 
     for (int i = 0; i < 8; ++i) {
-        tmp |= ram[address];
         tmp = tmp << 8;
+        tmp = tmp | (ram[address] & 0x0FF);
         ++address;
     }
 

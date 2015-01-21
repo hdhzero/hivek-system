@@ -98,7 +98,30 @@ void Hivek::writeback() {
 }
 
 void Hivek::calculate_next_rt_pc() {
-    // TODO
+/*    RTNextPCSels sel;
+    u32 alu_res;
+    u32 pc_res;
+    u32 sz_res;
+    u32 sz1;
+    u32 sz2;
+    u32 szs;
+    u32 next_pc;
+
+    sz1 = decode_instruction_size(instruction_size[0][4]->read());
+    sz2 = decode_instruction_size(instruction_size[1][4]->read());
+
+    alu_res = mux(sel.alu_sel, 
+        this->alu_res[0]->read(), 
+        this->alu_res[1]->read());
+
+    szs = mux(sel.sz_sel, sz1, sz1 + sz2);
+
+    sz_res = mux(sel.zero_sz_sel, szs, 0);
+    pc_res  = mux(sel.pc_alu_sel, alu_res, pcs[0][6]->read());
+    
+    next_pc = pc_res + sz_res;
+    pc[thread[0][4]->read()]->write(next_pc);*/
+
 }
 
 void Hivek::calculate_next_nrt_pc() {
@@ -343,21 +366,25 @@ u32 Hivek::control_address(u32 instruction) {
         if (tmp = is_shadd(instruction)) {
             switch (tmp) {
                 case OP_SLL:
-                    return 50;
-                case OP_SRL:
                     return 51;
-                case OP_SRA:
+                case OP_SRL:
                     return 52;
+                case OP_SRA:
+                    return 53;
             }
         } else {
-            return extract_op_from_type_iii(instruction) + 18;
+            return extract_op_from_type_iii(instruction) + 19;
         }
     } else if (is_type_i(instruction)) {
         return extract_op_from_type_i(instruction) + 1;
     } else if (is_type_iv(instruction)) {
-        return 53;
+        return 54;
     } else if (is_type_ii(instruction)) {
-        return 17;
+        if (instruction & (1 << 25)) {
+            return 18;
+        } else {
+            return 17;
+        }
     }
 
     return 0;
@@ -430,7 +457,7 @@ void Hivek::writeback_lane(int lane) {
     } else {
         vrc = alu_sh_res[lane]->read();
     }
-   
+
     regfile.write(lane, thread, wren, rc, vrc);
 }
 
@@ -616,6 +643,20 @@ u32 Hivek::get_second_instruction(u64 instructions, int& size) {
 void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(ctrl_addr[0]);
     ptr->add_register(alu_op[0][0]);
+    ptr->add_register64(rt_instructions);
+    ptr->add_register64(nrt_instructions);
+    ptr->add_register(vrb[0][1]);
+    ptr->add_register(vra[0][1]);
+    ptr->add_register(primary_thread[1]);
+    ptr->add_register(instructions[0]);
+    ptr->add_register(instructions[1]);
+    ptr->add_register(instruction_size[0][0]);
+    ptr->add_register(instruction_size[0][0]);
+    ptr->add_register(instruction_kind[0][0]);
+    ptr->add_register(instruction_kind[1][0]);
+    ptr->add_register(instruction_rtk[0]);
+    ptr->add_register(alu_res[0]);
+    ptr->add_register(r_wren[0][3]);
 }
 
 Hivek::Hivek() {

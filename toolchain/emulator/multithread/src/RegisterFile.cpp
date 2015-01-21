@@ -1,4 +1,5 @@
 #include "../include/RegisterFile.h"
+#include <iostream>
 
 using namespace HivekMultithreadEmulator;
 

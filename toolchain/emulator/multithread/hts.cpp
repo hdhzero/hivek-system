@@ -20,11 +20,11 @@ int main(int argc, char** argv) {
     mem.reset();
 
     for (int i = 0; i < 10000; i += 10) {
+        vcd.dump_signals(i);
         hivek.cycle();
         mem.cycle();
         hivek.update();
         mem.update();
-        vcd.dump_signals(i);
     }
 
     vcd.close();

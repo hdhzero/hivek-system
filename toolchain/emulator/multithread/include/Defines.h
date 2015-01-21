@@ -133,72 +133,73 @@ namespace HivekMultithreadEmulator {
         u32 instruction_kind;
     };
 
-    static ControlTable control_table[7]; // = {
-//        { ALU_ADD, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//
-//        /* Type I */
-//        { ALU_ADD, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // addi 
-//        { ALU_AND, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // and 
-//        { ALU_OR,  1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // or 
-//        { ALU_XOR, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // xor 
-//        { ALU_SUB, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, IK_LAM }, // eq 
-//        { ALU_SUB, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // lt 
-//        { ALU_SUB, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // ltu 
-//        { ALU_ADD, 1, 0, 1, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // lw 
-//        { ALU_ADD, 1, 0, 1, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // lh 
-//        { ALU_ADD, 1, 0, 1, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // lb 
-//        { ALU_ADD, 1, 0, 1, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // lhu 
-//        { ALU_ADD, 1, 0, 1, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, IK_LAM }, // lbu
-//        { ALU_ADD, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 1, 4, IK_LAM }, // sw 
-//        { ALU_ADD, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 1, 2, IK_LAM }, // sh 
-//        { ALU_ADD, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 1, 1, IK_LAM }, // sb 
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//
-//        /* Type II */
-//        { ALU_ADD, 3, 0, 0, BARREL_SLL, 0, 0, 3, 0, 0, 0, 0, IK_J }, // NOP
-//
-//        /* Type III */
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // add
-//        { ALU_SUB, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // sub
-//        { ALU_AND, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // and
-//        { ALU_OR,  0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // or
-//        { ALU_NOR, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // nor
-//        { ALU_XOR, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // xor
-//        { ALU_SUB, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, IK_LAM }, // eq
-//        { ALU_SUB, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // lt
-//        { ALU_SUB, 0, 0, 0, BARREL_SLL, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // ltu
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_JR }, // jr
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_JR }, // jalr
-//        { ALU_ADD, 0, 1, 0, BARREL_SLL, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // sll
-//        { ALU_ADD, 0, 1, 0, BARREL_SRL, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // srl
-//        { ALU_ADD, 0, 1, 0, BARREL_SRA, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // sra
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP
-//
-//        // shadd
-//        { ALU_ADD, 0, 1, 0, BARREL_SLL, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 1, 0, BARREL_SRL, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // NOP
-//        { ALU_ADD, 0, 1, 0, BARREL_SRA, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // NOP
-//
-//        /* Type IV */
-//        { ALU_ADD, 3, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, IK_B } // b bn
-//    };
+    static ControlTable control_table[] = {
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 0
+
+        /* Type I */
+        { ALU_ADD, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // addi 1
+        { ALU_AND, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // and  2
+        { ALU_OR,  0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // or   3
+        { ALU_XOR, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // xor  4
+        { ALU_SUB, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 0, 1, 0, 0, IK_LAM }, // eq   5
+        { ALU_SUB, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lt   6
+        { ALU_SUB, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // ltu  7
+        { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lw   8
+        { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lh   9
+        { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lb   10
+        { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lhu  11
+        { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lbu  12
+        { ALU_ADD, 0, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 1, 3, IK_LAM }, // sw   13
+        { ALU_ADD, 0, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 1, 2, IK_LAM }, // sh   14
+        { ALU_ADD, 0, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 1, 1, IK_LAM }, // sb   15
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP  16
+
+        /* Type II */
+        { ALU_ADD, 1, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 0, 0, 0, 0, IK_J }, // J 17
+        { ALU_ADD, 1, 1, 0, 0, BARREL_SLL, 0, 0, 1, 1, 1, 0, 0, 0, IK_J }, // Jal 18
+
+        /* Type III */
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // add 19
+        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // sub 20
+        { ALU_AND, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // and 21
+        { ALU_OR,  0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // or  22
+        { ALU_NOR, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // nor 23
+        { ALU_XOR, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // xor 24
+        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 1, 0, 0, IK_LAM }, // eq  25
+        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // lt  26
+        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // ltu 27
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_JR }, // jr   28
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_JR }, // jalr 29
+        { ALU_ADD, 0, 0, 1, 0, BARREL_SLL, 1, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // sll 30
+        { ALU_ADD, 0, 0, 1, 0, BARREL_SRL, 1, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // srl 31
+        { ALU_ADD, 0, 0, 1, 0, BARREL_SRA, 1, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // sra 32
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 33
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 34
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 35
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 36
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 37
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 38
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 39
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 40
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 41
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 42
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 43
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 44
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 45
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 46
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 47
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 48
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 49
+        { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_LAM }, // NOP 50
+
+        // shadd
+        { ALU_ADD, 0, 0, 1, 0, BARREL_SLL, 0, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // shadd sll 51
+        { ALU_ADD, 0, 0, 1, 0, BARREL_SRL, 0, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // shadd srl 52
+        { ALU_ADD, 0, 0, 1, 0, BARREL_SRA, 0, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // shadd sra 53
+
+        /* Type IV */
+        { ALU_ADD, 1, 1, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_B } // b bn 54
+    };
 }
 
 #endif
