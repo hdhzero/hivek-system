@@ -4,12 +4,14 @@
 #include "Defines.h"
 #include "Register.h"
 #include "RegisterPool.h"
+#include "VCDMonitor.h"
 
 namespace HivekMultithreadEmulator {
     class RegisterFile {
         public:
             void init();
             void set_rpool(RegisterPool* rpool);
+            void add_waves_to_vcd(VCDMonitor* ptr);
 
         public:
             void write(int lane, u32 thread, u32 wren, u32 rc, u32 vrc);

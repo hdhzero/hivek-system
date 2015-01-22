@@ -400,7 +400,7 @@ void Hivek::generate_alu_res_for_lane(int lane) {
     if (alu_pc_vra_sel[lane][1]->read()) {
         op_a = pcs[lane][5]->read();
     } else {
-        op_b = vra[lane][1]->read();
+        op_a = vra[lane][1]->read();
     }
 
     if (alu_vrb_immediate_sel[lane][1]->read()) {
@@ -641,22 +641,19 @@ u32 Hivek::get_second_instruction(u64 instructions, int& size) {
 }
 
 void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
-    ptr->add_register(ctrl_addr[0]);
-    ptr->add_register(alu_op[0][0]);
-    ptr->add_register64(rt_instructions);
-    ptr->add_register64(nrt_instructions);
-    ptr->add_register(vrb[0][1]);
-    ptr->add_register(vra[0][1]);
-    ptr->add_register(primary_thread[1]);
-    ptr->add_register(instructions[0]);
-    ptr->add_register(instructions[1]);
-    ptr->add_register(instruction_size[0][0]);
-    ptr->add_register(instruction_size[0][0]);
-    ptr->add_register(instruction_kind[0][0]);
-    ptr->add_register(instruction_kind[1][0]);
-    ptr->add_register(instruction_rtk[0]);
-    ptr->add_register(alu_res[0]);
-    ptr->add_register(r_wren[0][3]);
+    regfile.add_waves_to_vcd(ptr);
+    ptr->add_register(vrb[1][1]);
+    ptr->add_register(vra[1][1]);
+    ptr->add_register(vrb[1][0]);
+    ptr->add_register(vra[1][0]);
+    ptr->add_register(alu_res[1]);
+    ptr->add_register(alu_sh_res[1]);
+    ptr->add_register(threads[1][0]);
+    ptr->add_register(threads[1][1]);
+    ptr->add_register(threads[1][2]);
+    ptr->add_register(threads[1][3]);
+    ptr->add_register(threads[1][4]);
+    ptr->add_register(threads[1][5]);
 }
 
 Hivek::Hivek() {
