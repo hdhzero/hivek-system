@@ -8,10 +8,10 @@ void RegisterFile::set_rpool(RegisterPool* rpool) {
 }
 
 void RegisterFile::add_waves_to_vcd(VCDMonitor* ptr) {
-    ptr->add_register(rc[1]);
-    ptr->add_register(wren[1]);
-    ptr->add_register(vrc[1]);
-    ptr->add_register(thread_w[1]);
+    ptr->add_register(rc[0]);
+    ptr->add_register(wren[0]);
+    ptr->add_register(vrc[0]);
+    ptr->add_register(thread_w[0]);
 }
 
 void RegisterFile::init() {
@@ -49,6 +49,9 @@ void RegisterFile::init() {
     pr_wren[1] = rpool->create_register("regfilePr_wren{1}", 2);
 
     for (int i = 0; i < 16; ++i) {
+        pr_registers[i][0] = 1;
+        registers[i][0] = 0;
+
         for (int j = 0; j < 32; ++j) {
             registers[i][j] = 0;
         }

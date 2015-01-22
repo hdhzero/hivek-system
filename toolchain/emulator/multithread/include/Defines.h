@@ -101,7 +101,11 @@ namespace HivekMultithreadEmulator {
         ALU_AND = 2,
         ALU_OR = 3,
         ALU_NOR = 4,
-        ALU_XOR = 5
+        ALU_XOR = 5,
+
+        ALU_LT = 6,
+        ALU_LTU = 7,
+        ALU_EQ = 8
     };
 
     enum SHType {
@@ -141,9 +145,9 @@ namespace HivekMultithreadEmulator {
         { ALU_AND, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // and  2
         { ALU_OR,  0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // or   3
         { ALU_XOR, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // xor  4
-        { ALU_SUB, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 0, 1, 0, 0, IK_LAM }, // eq   5
-        { ALU_SUB, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lt   6
-        { ALU_SUB, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // ltu  7
+        { ALU_EQ,  0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 0, 1, 0, 0, IK_LAM }, // eq   5
+        { ALU_LT,  0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lt   6
+        { ALU_LTU, 0, 1, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // ltu  7
         { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lw   8
         { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lh   9
         { ALU_ADD, 0, 1, 0, 1, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lb   10
@@ -165,9 +169,9 @@ namespace HivekMultithreadEmulator {
         { ALU_OR,  0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // or  22
         { ALU_NOR, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // nor 23
         { ALU_XOR, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // xor 24
-        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 1, 0, 0, IK_LAM }, // eq  25
-        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // lt  26
-        { ALU_SUB, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // ltu 27
+        { ALU_EQ,  0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 1, 0, 0, IK_LAM }, // eq  25
+        { ALU_LT,  0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // lt  26
+        { ALU_LTU, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // ltu 27
         { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_JR }, // jr   28
         { ALU_ADD, 0, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 1, 0, 0, 0, IK_JR }, // jalr 29
         { ALU_ADD, 0, 0, 1, 0, BARREL_SLL, 1, 0, 0, 0, 1, 0, 0, 0, IK_LAM }, // sll 30

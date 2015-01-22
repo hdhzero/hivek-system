@@ -33,8 +33,13 @@ void Hivek::fetch() {
 
     tmp = primary_thread[0]->read();
     primary_thread[1]->write(tmp);
-    tmp = tmp == 7 ? 0 : tmp + 1;
-    primary_thread[0]->write(tmp);
+    primary_thread[2]->write(primary_thread[1]->read());
+
+    if (tmp == 7) {
+        primary_thread[0]->write(0);
+    } else {
+        primary_thread[0]->write(tmp + 1);
+    }
 
     rt_addr  = pc[tmp]->read();
     nrt_addr = pc[tmp + 8]->read();
@@ -52,6 +57,13 @@ void Hivek::fetch() {
 
     inst = mem->iread64(1, nrt_addr, nrt_hits);
     nrt_instructions->write(inst);
+
+    // tmp
+    if (rt_addr >= 12) {
+        pc[tmp]->write(0);
+    } else {
+        pc[tmp]->write(rt_addr + 4);
+    }
 }
 
 void Hivek::expand() {
@@ -131,7 +143,7 @@ void Hivek::calculate_next_nrt_pc() {
 void Hivek::get_instructions_from_rt() {
     int size;
     u32 tmp;
-    u32 pthread = primary_thread[1]->read();
+    u32 pthread = primary_thread[2]->read();
 
     tmp = get_first_instruction(rt_instructions->read(), size);
     threads[0][0]->write(pthread);
@@ -201,6 +213,9 @@ void Hivek::read_registers_in_lane(int lane) {
 
         vra[lane][1]->write(regfile.read_ra(lane, th, ra));
         vrb[lane][1]->write(regfile.read_rb(lane, th, rb));
+
+        pr = p_register->read();
+        p_rvalue[lane][1]->write(regfile.read_pr(lane, pr));
     }
 }
 
@@ -318,6 +333,10 @@ void Hivek::generate_reg_controls(int lane, ControlTable* ct, u32 inst) {
     r_wren[lane][2]->write(r_wren[lane][1]->read());
     r_wren[lane][3]->write(r_wren[lane][2]->read());
 
+    if (p_value[lane][2]->read() != p_rvalue[lane][1]->read()) {
+        r_wren[lane][2]->write(0);
+    }
+
     rb[lane][0]->write(extract_rb(inst));
     rb[lane][1]->write(rb[lane][0]->read());
 
@@ -346,6 +365,10 @@ void Hivek::generate_pred_controls(int lane, ControlTable* ct, u32 inst) {
     p_wren[lane][2]->write(p_wren[lane][1]->read());
     p_wren[lane][3]->write(p_wren[lane][2]->read());
 
+    if (p_value[lane][2]->read() != p_rvalue[lane][1]->read()) {
+        p_wren[lane][2]->write(0);
+    }
+
     p_value[lane][0]->write(extract_predicate_value(inst));
     p_value[lane][1]->write(p_value[lane][0]->read());
     p_value[lane][2]->write(p_value[lane][1]->read());
@@ -362,7 +385,9 @@ void Hivek::generate_mem_controls(int lane, ControlTable* ct) {
 u32 Hivek::control_address(u32 instruction) {
     int tmp;
 
-    if (is_type_iii(instruction)) {
+    if (is_type_iv(instruction)) {
+        return 54;
+    } else if (is_type_iii(instruction)) {
         if (tmp = is_shadd(instruction)) {
             switch (tmp) {
                 case OP_SLL:
@@ -375,18 +400,22 @@ u32 Hivek::control_address(u32 instruction) {
         } else {
             return extract_op_from_type_iii(instruction) + 19;
         }
-    } else if (is_type_i(instruction)) {
-        return extract_op_from_type_i(instruction) + 1;
-    } else if (is_type_iv(instruction)) {
-        return 54;
     } else if (is_type_ii(instruction)) {
         if (instruction & (1 << 25)) {
             return 18;
         } else {
             return 17;
         }
+    } else if (is_type_i(instruction)) {
+        return extract_op_from_type_i(instruction) + 1;
     }
 
+std::cout << "shadd: " << std::hex << instruction << std::dec << std::endl;
+std::cout << "t3: " << std::hex << instruction << std::dec << std::endl;
+std::cout << "t1: " << std::hex << instruction << std::dec << std::endl;
+std::cout << "t4: " << std::hex << instruction << std::dec << std::endl;
+std::cout << "t2: " << std::hex << instruction << std::dec << std::endl;
+std::cout << "here: " << std::hex << instruction << std::endl;
     return 0;
 }
 
@@ -449,6 +478,7 @@ void Hivek::generate_alu_sh_res_for_lane(int lane) {
 void Hivek::writeback_lane(int lane) {
     u32 thread = this->threads[lane][5]->read();
     u32 wren   = this->r_wren[lane][3]->read();
+    u32 p_wren = this->p_wren[lane][3]->read();
     u32 rc     = this->rc[lane][4]->read();
     u32 vrc;
 
@@ -459,6 +489,7 @@ void Hivek::writeback_lane(int lane) {
     }
 
     regfile.write(lane, thread, wren, rc, vrc);
+    regfile.write_pr(lane, p_wren, rc & 0x03, vrc & 0x01);
 }
 
 
@@ -481,6 +512,15 @@ u32 Hivek::alu(u32 op, u32 a, u32 b) {
 
         case ALU_XOR:
             return a ^ b;
+
+        case ALU_LT:
+            return (((i32) a) < ((i32) b));
+
+        case ALU_LTU:
+            return a < b;
+
+        case ALU_EQ:
+            return a == b;
     }
 
     return 0;
@@ -642,18 +682,27 @@ u32 Hivek::get_second_instruction(u64 instructions, int& size) {
 
 void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
     regfile.add_waves_to_vcd(ptr);
-    ptr->add_register(vrb[1][1]);
-    ptr->add_register(vra[1][1]);
-    ptr->add_register(vrb[1][0]);
-    ptr->add_register(vra[1][0]);
-    ptr->add_register(alu_res[1]);
-    ptr->add_register(alu_sh_res[1]);
-    ptr->add_register(threads[1][0]);
-    ptr->add_register(threads[1][1]);
-    ptr->add_register(threads[1][2]);
-    ptr->add_register(threads[1][3]);
-    ptr->add_register(threads[1][4]);
-    ptr->add_register(threads[1][5]);
+    ptr->add_register(vrb[0][1]);
+    ptr->add_register(vra[0][1]);
+    ptr->add_register(vrb[0][0]);
+    ptr->add_register(vra[0][0]);
+    ptr->add_register(alu_res[0]);
+    ptr->add_register(alu_sh_res[0]);
+    ptr->add_register(threads[0][0]);
+    ptr->add_register(threads[0][1]);
+    ptr->add_register(threads[0][2]);
+    ptr->add_register(threads[0][3]);
+    ptr->add_register(threads[0][4]);
+    ptr->add_register(r_wren[0][3]);
+    ptr->add_register(threads[0][5]);
+    ptr->add_register(p_wren[0][3]);
+    ptr->add_register(alu_op[0][1]);
+    ptr->add_register(primary_thread[0]);
+    ptr->add_register(primary_thread[1]);
+    ptr->add_register(primary_thread[2]);
+    ptr->add_register(pc[0]);
+    ptr->add_register(instructions[0]);
+    ptr->add_register(instructions[1]);
 }
 
 Hivek::Hivek() {
@@ -674,7 +723,7 @@ S[i] = rpool.create_register(t.str(), Z); \
     regfile.init();
 
     BUILD(ctrl_addr, 2, 8);
-    BUILD(primary_thread, 2, 3);
+    BUILD(primary_thread, 3, 3);
     BUILD(pc, 16, 32);
     BUILDM(pcs, 2, 7, 32);
     rt_instructions = rpool.create_register64("rt_instructions", 64);
@@ -707,7 +756,7 @@ S[i] = rpool.create_register(t.str(), Z); \
     BUILDM(p_wren, 2, 4, 1);
     BUILDM(p_value, 2, 3, 1);
     BUILDM(p_rvalue, 2, 2, 1);
-    BUILDM(p_register, 2, 2, 2);
+    p_register = rpool.create_register("p_register", 2);
 
     BUILDM(m_wren, 2, 2, 1);
     BUILDM(m_size, 2, 2, 2);

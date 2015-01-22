@@ -93,7 +93,7 @@ namespace HivekMultithreadEmulator {
 
         private:
             Register<u32>* ctrl_addr[N_LANES];
-            Register<u32>* primary_thread[2];
+            Register<u32>* primary_thread[3];
             Register<u32>* pc[16];
             Register<u32>* pcs[N_LANES][7];
             Register<u64>* rt_instructions;
@@ -126,7 +126,7 @@ namespace HivekMultithreadEmulator {
             Register<u32>* p_wren[N_LANES][4];
             Register<u32>* p_value[N_LANES][3];
             Register<u32>* p_rvalue[N_LANES][2];
-            Register<u32>* p_register[N_LANES][2];
+            Register<u32>* p_register;
 
             Register<u32>* m_wren[N_LANES][2];
             Register<u32>* m_size[N_LANES][2];
