@@ -264,11 +264,11 @@ void Hivek::generate_rtks() {
 void Hivek::generate_immediates(int lane, u32 inst) {
     u32 tmp = 0;
 
-    if (is_type_i(inst)) {
-        tmp = extract_immd_from_type_i(inst);
+    if (is_type_iv(inst)) {
+        tmp = extract_immd_from_type_iv(inst);
 
-        if (tmp & 0x200) {
-            tmp = 0x0FFFFFC00 | tmp;
+        if (tmp & 0x08000) {
+            tmp = 0x0FFFF0000 | tmp;
         }
     } else if (is_type_ii(inst)) {
         tmp = extract_immd_from_type_ii(inst);
@@ -276,11 +276,11 @@ void Hivek::generate_immediates(int lane, u32 inst) {
         if (tmp & 0x01000000) {
             tmp = 0x0FE000000 | tmp;
         }
-    } else if (is_type_iv(inst)) {
-        tmp = extract_immd_from_type_iv(inst);
+    } else if (is_type_i(inst)) {
+        tmp = extract_immd_from_type_i(inst);
 
-        if (tmp & 0x08000) {
-            tmp = 0x0FFFF0000 | tmp;
+        if (tmp & 0x200) {
+            tmp = 0x0FFFFFC00 | tmp;
         }
     }
 
@@ -410,12 +410,6 @@ u32 Hivek::control_address(u32 instruction) {
         return extract_op_from_type_i(instruction) + 1;
     }
 
-std::cout << "shadd: " << std::hex << instruction << std::dec << std::endl;
-std::cout << "t3: " << std::hex << instruction << std::dec << std::endl;
-std::cout << "t1: " << std::hex << instruction << std::dec << std::endl;
-std::cout << "t4: " << std::hex << instruction << std::dec << std::endl;
-std::cout << "t2: " << std::hex << instruction << std::dec << std::endl;
-std::cout << "here: " << std::hex << instruction << std::endl;
     return 0;
 }
 
@@ -703,6 +697,8 @@ void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(pc[0]);
     ptr->add_register(instructions[0]);
     ptr->add_register(instructions[1]);
+    ptr->add_register(pcs[0][6]);
+    ptr->add_register(immediate[0][2]);
 }
 
 Hivek::Hivek() {

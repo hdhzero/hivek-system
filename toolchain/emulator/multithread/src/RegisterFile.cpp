@@ -50,6 +50,10 @@ void RegisterFile::init() {
 
     for (int i = 0; i < 16; ++i) {
         pr_registers[i][0] = 1;
+        pr_registers[i][1] = 0;
+        pr_registers[i][2] = 0;
+        pr_registers[i][3] = 0;
+
         registers[i][0] = 0;
 
         for (int j = 0; j < 32; ++j) {
