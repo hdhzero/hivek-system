@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
         mem.update();
     }
 
+    hivek.dump_registers();
     vcd.close();
 
     return 0;

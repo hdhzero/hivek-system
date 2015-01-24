@@ -18,6 +18,7 @@ namespace HivekMultithreadEmulator {
         public:
             void set_memory_hierarchy(MemoryHierarchy* ptr);
             void add_waves_to_vcd(VCDMonitor* ptr);
+            void dump_registers();
 
         private:
             void fetch();
@@ -83,6 +84,11 @@ namespace HivekMultithreadEmulator {
             u32 expand24(u32 instruction);
             u32 encode_instruction_size(u32 size);
             u32 decode_instruction_size(u32 size);
+            RTNextPCSels rtnp_make(u32 pc_alu_sel, u32 alu_sel, u32 zero_sz_sel, u32 sz_sel);
+            RTNextPCSels next_rt_pc_rt_rt(u32 k0, u32 k1, u32 p0, u32 p1);
+            RTNextPCSels next_rt_pc_rt_nrt(u32 k0, u32 p0);
+            RTNextPCSels next_rt_pc_rt_nop(u32 k0, u32 p0);
+            RTNextPCSels rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1);
 
         private:
             RegisterPool rpool;
@@ -127,6 +133,7 @@ namespace HivekMultithreadEmulator {
             Register<u32>* p_value[N_LANES][3];
             Register<u32>* p_rvalue[N_LANES][2];
             Register<u32>* p_register;
+            Register<u32>* pres[N_LANES];
 
             Register<u32>* m_wren[N_LANES][2];
             Register<u32>* m_size[N_LANES][2];

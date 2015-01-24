@@ -12,6 +12,7 @@ namespace HivekMultithreadEmulator {
             void init();
             void set_rpool(RegisterPool* rpool);
             void add_waves_to_vcd(VCDMonitor* ptr);
+            void dump_registers();
 
         public:
             void write(int lane, u32 thread, u32 wren, u32 rc, u32 vrc);

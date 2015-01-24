@@ -90,8 +90,7 @@ namespace HivekMultithreadEmulator {
 
         IK_B_J = 13,
         IK_B_JR = 14,
-        IKB_B = 15
-        
+        IK_B_B = 15
     };
 
     enum ALUOp {
@@ -112,6 +111,13 @@ namespace HivekMultithreadEmulator {
         BARREL_SLL,
         BARREL_SRL,
         BARREL_SRA
+    };
+
+    struct RTNextPCSels {
+        u32 pc_alu_sel;
+        u32 alu_sel;
+        u32 zero_sz_sel;
+        u32 sz_sel;
     };
 
     struct ControlTable {

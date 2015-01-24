@@ -12,6 +12,9 @@ void RegisterFile::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(wren[0]);
     ptr->add_register(vrc[0]);
     ptr->add_register(thread_w[0]);
+    ptr->add_register(pr_wren[0]);
+    ptr->add_register(pr_w[0]);
+    ptr->add_register(pr_v[0]);
 }
 
 void RegisterFile::init() {
@@ -45,8 +48,8 @@ void RegisterFile::init() {
     pr_v[0] = rpool->create_register("regfilePr_v{0}", 2);
     pr_v[1] = rpool->create_register("regfilePr_v{1}", 2);
 
-    pr_wren[0] = rpool->create_register("regfilePr_wren{0}", 2);
-    pr_wren[1] = rpool->create_register("regfilePr_wren{1}", 2);
+    pr_wren[0] = rpool->create_register("regfilePr_wren{0}", 1);
+    pr_wren[1] = rpool->create_register("regfilePr_wren{1}", 1);
 
     for (int i = 0; i < 16; ++i) {
         pr_registers[i][0] = 1;
@@ -132,3 +135,15 @@ u32 RegisterFile::get_vrb(int lane) {
     return registers[thread][rb];
 }
 
+void RegisterFile::dump_registers() {
+    for (int i = 0; i < 16; ++i) {
+        std::cout << "thread " << i << ":\n    ";
+
+        for (int j = 0; j < 32; ++j) {
+            if (j == 15) std::cout << std::endl << "    ";
+            std::cout << j << ":" << registers[i][j] << "  ";
+        }
+
+        std::cout << '\n';
+    }
+}

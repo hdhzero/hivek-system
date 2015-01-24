@@ -57,13 +57,6 @@ void Hivek::fetch() {
 
     inst = mem->iread64(1, nrt_addr, nrt_hits);
     nrt_instructions->write(inst);
-
-    // tmp
-    if (rt_addr >= 12) {
-        pc[tmp]->write(0);
-    } else {
-        pc[tmp]->write(rt_addr + 4);
-    }
 }
 
 void Hivek::expand() {
@@ -110,7 +103,7 @@ void Hivek::writeback() {
 }
 
 void Hivek::calculate_next_rt_pc() {
-/*    RTNextPCSels sel;
+    RTNextPCSels sel;
     u32 alu_res;
     u32 pc_res;
     u32 sz_res;
@@ -118,26 +111,180 @@ void Hivek::calculate_next_rt_pc() {
     u32 sz2;
     u32 szs;
     u32 next_pc;
+    u32 th;
+
+    u32 rtk;
+    u32 k0;
+    u32 k1;
+    u32 p0;
+    u32 p1;
+
+    rtk = this->instruction_rtk[4]->read();
+    k0  = this->instruction_kind[0][2]->read();
+    k1  = this->instruction_kind[0][2]->read();
+    p0  = this->pres[0]->read();
+    p1  = this->pres[1]->read();
+
+    sel = rt_next_pc(rtk, k0, k1, p0, p1);
 
     sz1 = decode_instruction_size(instruction_size[0][4]->read());
     sz2 = decode_instruction_size(instruction_size[1][4]->read());
 
-    alu_res = mux(sel.alu_sel, 
-        this->alu_res[0]->read(), 
-        this->alu_res[1]->read());
+    if (sel.alu_sel) {
+        alu_res = this->alu_res[1]->read();
+    } else {
+        alu_res = this->alu_res[0]->read();
+    }
 
-    szs = mux(sel.sz_sel, sz1, sz1 + sz2);
+    if (sel.zero_sz_sel) {
+        sz_res = 0;
+    } else {
+        sz_res = sel.sz_sel ? sz1 + sz2 : sz1;
+    }
 
-    sz_res = mux(sel.zero_sz_sel, szs, 0);
-    pc_res  = mux(sel.pc_alu_sel, alu_res, pcs[0][6]->read());
+    pc_res = sel.pc_alu_sel ? pcs[0][6]->read() : alu_res;
     
     next_pc = pc_res + sz_res;
-    pc[thread[0][4]->read()]->write(next_pc);*/
 
+    th = threads[0][4]->read();
+
+    if (th > 7) {
+        th = th - 8;
+    }
+
+    pc[threads[0][4]->read()]->write(next_pc);
 }
 
 void Hivek::calculate_next_nrt_pc() {
     // TODO
+}
+
+RTNextPCSels Hivek::rtnp_make(u32 pc_alu_sel, u32 alu_sel, u32 zero_sz_sel, u32 sz_sel) {
+    RTNextPCSels tmp;
+
+    tmp.pc_alu_sel = pc_alu_sel;
+    tmp.alu_sel = alu_sel;
+    tmp.zero_sz_sel = zero_sz_sel;
+    tmp.sz_sel = sz_sel;
+
+    return tmp;
+}
+
+RTNextPCSels Hivek::next_rt_pc_rt_rt(u32 k0, u32 k1, u32 p0, u32 p1) {
+    u32 kind = (k0 << 2) | k1;
+    
+    switch (kind) {
+    case IK_LAM_LAM:
+        return rtnp_make(1, 0, 0, 1);
+
+    case IK_LAM_J:
+        return rtnp_make(0, 1, 0, 0);
+
+    case IK_LAM_JR:
+        if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_LAM_B:
+        if (p1) {
+            return rtnp_make(0, 1, 0, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_JR_J:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else {
+            return rtnp_make(0, 1, 0, 0);
+        }
+
+    case IK_JR_JR:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_JR_B:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 0, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        } 
+
+    case IK_B_J:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else {
+            return rtnp_make(0, 1, 0, 0);
+        }
+
+    case IK_B_JR:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_B_B:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 0, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+    }
+}
+
+RTNextPCSels Hivek::next_rt_pc_rt_nrt(u32 k0, u32 p0) {
+    switch (k0) {
+    case IK_LAM:
+        return rtnp_make(1, 0, 0, 0);
+
+    case IK_J:
+        return rtnp_make(0, 0, 1, 0);
+
+    case IK_JR:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 0);
+        }
+
+    case IK_B:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 0);
+        }
+    }
+}
+
+RTNextPCSels Hivek::next_rt_pc_rt_nop(u32 k0, u32 p0) {
+    return next_rt_pc_rt_nrt(k0, p0);
+}
+
+RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
+    switch (rtk) {
+    case RTK_RT_RT:
+        return next_rt_pc_rt_rt(k0, k1, p0, p1);
+
+    case RTK_RT_NRT:
+        return next_rt_pc_rt_nrt(k0, p0);
+
+    case RTK_RT_NOP:
+        return next_rt_pc_rt_nop(k0, p0);
+    }
 }
 
 void Hivek::get_instructions_from_rt() {
@@ -360,18 +507,24 @@ void Hivek::generate_reg_controls(int lane, ControlTable* ct, u32 inst) {
 }
 
 void Hivek::generate_pred_controls(int lane, ControlTable* ct, u32 inst) {
+    u32 flag;
+
     p_wren[lane][0]->write(ct->p_wren);
     p_wren[lane][1]->write(p_wren[lane][0]->read());
     p_wren[lane][2]->write(p_wren[lane][1]->read());
     p_wren[lane][3]->write(p_wren[lane][2]->read());
 
-    if (p_value[lane][2]->read() != p_rvalue[lane][1]->read()) {
-        p_wren[lane][2]->write(0);
-    }
-
     p_value[lane][0]->write(extract_predicate_value(inst));
     p_value[lane][1]->write(p_value[lane][0]->read());
     p_value[lane][2]->write(p_value[lane][1]->read());
+
+    flag = p_value[lane][2]->read() == p_rvalue[lane][1]->read();
+
+    if (!flag) {
+        p_wren[lane][2]->write(0);
+    }
+
+    pres[lane]->write(flag);
 }
 
 void Hivek::generate_mem_controls(int lane, ControlTable* ct) {
@@ -534,10 +687,18 @@ u32 Hivek::barrel_shifter(u32 shift_type, u32 a, u32 shift_ammount) {
 }
 
 u32 Hivek::extract_predicate_value(u32 instruction) {
+    if (is_type_ii(instruction)) {
+        return 1;
+    }
+
     return (instruction & 0x04) >> 2;
 }
 
 u32 Hivek::extract_predicate_register(u32 instruction) {
+    if (is_type_ii(instruction)) {
+        return 0;
+    }
+
     return instruction & 0x03;
 }
 
@@ -578,19 +739,19 @@ u32 Hivek::extract_immd_from_type_iv(u32 instruction) {
 }
 
 bool Hivek::is_type_i(u32 instruction) {
-    return (instruction & TYPE_I_MASK) == TYPE_I_MASK;
+    return (instruction & 0x078000000) == TYPE_I_MASK;
 }
 
 bool Hivek::is_type_ii(u32 instruction) {
-    return (instruction & TYPE_II_MASK) == TYPE_II_MASK;
+    return (instruction & 0x07C000000) == TYPE_II_MASK;
 }
 
 bool Hivek::is_type_iii(u32 instruction) {
-    return (instruction & TYPE_III_MASK) == TYPE_III_MASK;
+    return (instruction & 0x07E000000) == TYPE_III_MASK;
 }
 
 bool Hivek::is_type_iv(u32 instruction) {
-    return (instruction & TYPE_IV_MASK) == TYPE_IV_MASK;
+    return (instruction & 0x07F000000) == TYPE_IV_MASK;
 }
 
 bool Hivek::is_type_v(u32 instruction) {
@@ -670,6 +831,10 @@ u32 Hivek::get_first_instruction(u64 instructions, int& size) {
     }
 }
 
+void Hivek::dump_registers() {
+    regfile.dump_registers();
+}
+
 u32 Hivek::get_second_instruction(u64 instructions, int& size) {
     return get_first_instruction(instructions << size, size);
 }
@@ -699,6 +864,8 @@ void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(instructions[1]);
     ptr->add_register(pcs[0][6]);
     ptr->add_register(immediate[0][2]);
+    ptr->add_register(pres[0]);
+    ptr->add_register(pres[1]);
 }
 
 Hivek::Hivek() {
@@ -753,6 +920,7 @@ S[i] = rpool.create_register(t.str(), Z); \
     BUILDM(p_value, 2, 3, 1);
     BUILDM(p_rvalue, 2, 2, 1);
     p_register = rpool.create_register("p_register", 2);
+    BUILD(pres, 2, 1);
 
     BUILDM(m_wren, 2, 2, 1);
     BUILDM(m_size, 2, 2, 2);
