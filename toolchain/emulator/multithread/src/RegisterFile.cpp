@@ -9,9 +9,13 @@ void RegisterFile::set_rpool(RegisterPool* rpool) {
 
 void RegisterFile::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(rc[0]);
+    ptr->add_register(rc[1]);
     ptr->add_register(wren[0]);
+    ptr->add_register(wren[1]);
     ptr->add_register(vrc[0]);
+    ptr->add_register(vrc[1]);
     ptr->add_register(thread_w[0]);
+    ptr->add_register(thread_w[1]);
     ptr->add_register(pr_wren[0]);
     ptr->add_register(pr_w[0]);
     ptr->add_register(pr_v[0]);
@@ -141,7 +145,7 @@ void RegisterFile::dump_registers() {
 
         for (int j = 0; j < 32; ++j) {
             if (j == 15) std::cout << std::endl << "    ";
-            std::cout << j << ":" << registers[i][j] << "  ";
+            std::cout << j << ":" << (i32) registers[i][j] << "  ";
         }
 
         std::cout << '\n';

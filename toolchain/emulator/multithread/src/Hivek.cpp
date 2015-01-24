@@ -277,6 +277,7 @@ RTNextPCSels Hivek::next_rt_pc_rt_nop(u32 k0, u32 p0) {
 RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
     switch (rtk) {
     case RTK_RT_RT:
+std::cout << "here " << k0 << ' ' << k1 << ' ' << p0 << ' ' << p1 << '\n';
         return next_rt_pc_rt_rt(k0, k1, p0, p1);
 
     case RTK_RT_NRT:
@@ -489,6 +490,7 @@ void Hivek::generate_reg_controls(int lane, ControlTable* ct, u32 inst) {
 
     if (lane == 1) {
         ra->write(extract_ra(inst));
+        p_register->write(extract_predicate_register(inst));
     }
    
     rc[lane][0]->write(extract_rc(inst));
@@ -846,26 +848,21 @@ void Hivek::add_waves_to_vcd(VCDMonitor* ptr) {
     ptr->add_register(vrb[0][0]);
     ptr->add_register(vra[0][0]);
     ptr->add_register(alu_res[0]);
-    ptr->add_register(alu_sh_res[0]);
-    ptr->add_register(threads[0][0]);
-    ptr->add_register(threads[0][1]);
-    ptr->add_register(threads[0][2]);
-    ptr->add_register(threads[0][3]);
-    ptr->add_register(threads[0][4]);
+    ptr->add_register(alu_res[1]);
     ptr->add_register(r_wren[0][3]);
     ptr->add_register(threads[0][5]);
+    ptr->add_register(threads[1][5]);
     ptr->add_register(p_wren[0][3]);
     ptr->add_register(alu_op[0][1]);
-    ptr->add_register(primary_thread[0]);
-    ptr->add_register(primary_thread[1]);
-    ptr->add_register(primary_thread[2]);
     ptr->add_register(pc[0]);
     ptr->add_register(instructions[0]);
     ptr->add_register(instructions[1]);
     ptr->add_register(pcs[0][6]);
+    ptr->add_register(pcs[1][6]);
     ptr->add_register(immediate[0][2]);
     ptr->add_register(pres[0]);
     ptr->add_register(pres[1]);
+    ptr->add_register(instruction_rtk[0]);
 }
 
 Hivek::Hivek() {
