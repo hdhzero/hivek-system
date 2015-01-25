@@ -121,7 +121,7 @@ void Hivek::calculate_next_rt_pc() {
 
     rtk = this->instruction_rtk[4]->read();
     k0  = this->instruction_kind[0][2]->read();
-    k1  = this->instruction_kind[0][2]->read();
+    k1  = this->instruction_kind[1][2]->read();
     p0  = this->pres[0]->read();
     p1  = this->pres[1]->read();
 
@@ -143,7 +143,9 @@ void Hivek::calculate_next_rt_pc() {
     }
 
     pc_res = sel.pc_alu_sel ? pcs[0][6]->read() : alu_res;
-    
+if (pcs[0][6]->read() == 0x018 && alu_res == 0x08) {
+std::cout << "ok! " << pc_res << ' ' << sz_res << '\n'; 
+}
     next_pc = pc_res + sz_res;
 
     th = threads[0][4]->read();
@@ -277,7 +279,6 @@ RTNextPCSels Hivek::next_rt_pc_rt_nop(u32 k0, u32 p0) {
 RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
     switch (rtk) {
     case RTK_RT_RT:
-std::cout << "here " << k0 << ' ' << k1 << ' ' << p0 << ' ' << p1 << '\n';
         return next_rt_pc_rt_rt(k0, k1, p0, p1);
 
     case RTK_RT_NRT:
@@ -576,7 +577,22 @@ void Hivek::generate_alu_res_for_lane(int lane) {
     aluOp = alu_op[lane][1]->read();
 
     if (alu_pc_vra_sel[lane][1]->read()) {
-        op_a = pcs[lane][5]->read();
+        u32 rtk = instruction_rtk[3]->read();
+
+        switch (rtk) {
+        case RTK_RT_RT:
+            op_a = pcs[0][5]->read(); break;
+
+        case RTK_NRT_NRT:
+            op_a = pcs[1][5]->read(); break;
+
+        case RTK_RT_NRT:
+        case RTK_RT_NOP:
+        case RTK_NRT_NOP:
+        case RTK_NOP_NOP:
+            op_a = lane == 0 ? pcs[0][5]->read() : pcs[1][5]->read(); break;
+        }
+//        op_a = pcs[lane][5]->read();
     } else {
         op_a = vra[lane][1]->read();
     }
