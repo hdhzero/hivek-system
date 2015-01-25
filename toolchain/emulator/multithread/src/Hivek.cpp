@@ -88,11 +88,13 @@ void Hivek::execute() {
     generate_alu_res_for_lane(0);
     generate_sh_res_for_lane(0);
     generate_alu_sh_res_for_lane(0);
+    generate_jump_res_for_lane(0);
     calculate_next_rt_pc();
 
     generate_alu_res_for_lane(1);
     generate_sh_res_for_lane(1);
     generate_alu_sh_res_for_lane(1);
+    generate_jump_res_for_lane(1);
     calculate_next_nrt_pc();
 }
 
@@ -143,9 +145,6 @@ void Hivek::calculate_next_rt_pc() {
     }
 
     pc_res = sel.pc_alu_sel ? pcs[0][6]->read() : alu_res;
-if (pcs[0][6]->read() == 0x018 && alu_res == 0x08) {
-std::cout << "ok! " << pc_res << ' ' << sz_res << '\n'; 
-}
     next_pc = pc_res + sz_res;
 
     th = threads[0][4]->read();
@@ -438,6 +437,65 @@ void Hivek::generate_immediates(int lane, u32 inst) {
     immediate[lane][2]->write(immediate[lane][1]->read());
 }
 
+void Hivek::generate_jump_res_for_lane(int lane) {
+    u32 szs;
+    u32 pc;
+    u32 rtk = instruction_rtk[4]->read();
+    u32 sz1 = decode_instruction_size(instruction_size[0][4]->read());
+    u32 sz2 = decode_instruction_size(instruction_size[1][4]->read());
+
+    if (lane == 0) {
+        switch (rtk) {
+        case RTK_RT_RT:
+            szs = sz1 + sz2;
+            pc  = pcs[0][6]->read();
+            break;
+
+        case RTK_RT_NRT:
+        case RTK_RT_NOP:
+            szs = sz1;
+            pc  = pcs[0][6]->read();
+            break;
+
+        case RTK_NRT_NRT:
+            szs = sz1 + sz2;
+            pc  = pcs[1][6]->read();
+            break;
+
+        case RTK_NRT_NOP:
+        case RTK_NOP_NOP:
+            szs = sz1;
+            pc  = pcs[1][6]->read();
+        }
+    } else {
+        switch (rtk) {
+        case RTK_RT_RT:
+            szs = sz1 + sz2;
+            pc  = pcs[0][6]->read();
+            break;
+
+        case RTK_RT_NRT:
+        case RTK_RT_NOP:
+            szs = sz2;
+            pc  = pcs[1][6]->read();
+            break;
+
+        case RTK_NRT_NRT:
+            szs = sz1 + sz2;
+            pc  = pcs[1][6]->read();
+            break;
+
+        case RTK_NRT_NOP:
+        case RTK_NOP_NOP:
+            szs = sz1;
+            pc  = pcs[1][6]->read();
+            break;
+        }
+    }
+
+    jump_res[lane]->write(pc + szs);
+}
+
 void Hivek::generate_alu_controls(int lane, ControlTable* ct) {
     alu_op[lane][0]->write(ct->alu_op);
     alu_op[lane][1]->write(alu_op[lane][0]->read());
@@ -456,6 +514,11 @@ void Hivek::generate_alu_controls(int lane, ControlTable* ct) {
     alu_sh_mem_sel[lane][1]->write(alu_sh_mem_sel[lane][0]->read());
     alu_sh_mem_sel[lane][2]->write(alu_sh_mem_sel[lane][1]->read());
     alu_sh_mem_sel[lane][3]->write(alu_sh_mem_sel[lane][2]->read());
+
+    alu_sh_mem_jump_sel[lane][0]->write(ct->alu_sh_mem_jump_sel);
+    alu_sh_mem_jump_sel[lane][1]->write(alu_sh_mem_jump_sel[lane][0]->read());
+    alu_sh_mem_jump_sel[lane][2]->write(alu_sh_mem_jump_sel[lane][1]->read());
+    alu_sh_mem_jump_sel[lane][3]->write(alu_sh_mem_jump_sel[lane][2]->read());
 }
 
 void Hivek::generate_sh_controls(int lane, ControlTable* ct, u32 inst) {
@@ -651,6 +714,10 @@ void Hivek::writeback_lane(int lane) {
         vrc = mem_res[lane]->read();
     } else {
         vrc = alu_sh_res[lane]->read();
+    }
+
+    if (alu_sh_mem_jump_sel[lane][3]->read()) {
+        vrc = jump_res[lane]->read();
     }
 
     regfile.write(lane, thread, wren, rc, vrc);
@@ -916,6 +983,7 @@ S[i] = rpool.create_register(t.str(), Z); \
     BUILDM(alu_vrb_immediate_sel, 2, 2, 1);
     BUILDM(alu_sh_sel, 2, 3, 1);
     BUILDM(alu_sh_mem_sel, 2, 4, 1);
+    BUILDM(alu_sh_mem_jump_sel, 2, 4, 1);
 
     BUILDM(sh_type, 2, 2, 2);
     BUILDM(sh_amount_sel, 2, 2, 1);
@@ -946,4 +1014,5 @@ S[i] = rpool.create_register(t.str(), Z); \
     BUILD(sh_res, 2, 32);
     BUILD(alu_sh_res, 2, 32);
     BUILD(mem_res, 2, 32);
+    BUILD(jump_res, 2, 32);
 }

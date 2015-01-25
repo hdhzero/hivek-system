@@ -45,6 +45,7 @@ namespace HivekMultithreadEmulator {
             void generate_alu_res_for_lane(int lane);
             void generate_sh_res_for_lane(int lane);
             void generate_alu_sh_res_for_lane(int lane);
+            void generate_jump_res_for_lane(int lane);
             void writeback_lane(int lane);
 
             void read_registers_in_lane(int lane);
@@ -116,6 +117,7 @@ namespace HivekMultithreadEmulator {
             Register<u32>* alu_vrb_immediate_sel[N_LANES][2];
             Register<u32>* alu_sh_sel[N_LANES][3];
             Register<u32>* alu_sh_mem_sel[N_LANES][4];
+            Register<u32>* alu_sh_mem_jump_sel[N_LANES][4];
 
             Register<u32>* sh_type[N_LANES][2];
             Register<u32>* sh_amount_sel[N_LANES][2];
@@ -148,6 +150,7 @@ namespace HivekMultithreadEmulator {
 
             Register<u32>* alu_sh_res[N_LANES];
             Register<u32>* mem_res[N_LANES];
+            Register<u32>* jump_res[N_LANES];
     };
 }
 
