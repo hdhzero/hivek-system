@@ -155,11 +155,11 @@ namespace HivekMultithreadEmulator {
         { ALU_EQ,  0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 1, 0, 0, 1, 0, 0, IK_LAM }, // eq   5
         { ALU_LT,  0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lt   6
         { ALU_LTU, 0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // ltu  7
-        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lw   8
-        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lh   9
-        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lb   10
-        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lhu  11
-        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lbu  12
+        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 3, IK_LAM }, // lw   8
+        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 2, IK_LAM }, // lh   9
+        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 1, IK_LAM }, // lb   10
+        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 2, IK_LAM }, // lhu  11
+        { ALU_ADD, 0, 1, 0, 1, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 1, IK_LAM }, // lbu  12
         { ALU_ADD, 0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 1, 3, IK_LAM }, // sw   13
         { ALU_ADD, 0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 1, 2, IK_LAM }, // sh   14
         { ALU_ADD, 0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 1, 1, IK_LAM }, // sb   15

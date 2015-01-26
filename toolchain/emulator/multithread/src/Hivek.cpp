@@ -89,12 +89,14 @@ void Hivek::execute() {
     generate_sh_res_for_lane(0);
     generate_alu_sh_res_for_lane(0);
     generate_jump_res_for_lane(0);
+    access_dmem(0);
     calculate_next_rt_pc();
 
     generate_alu_res_for_lane(1);
     generate_sh_res_for_lane(1);
     generate_alu_sh_res_for_lane(1);
     generate_jump_res_for_lane(1);
+    access_dmem(1);
     calculate_next_nrt_pc();
 }
 
@@ -599,6 +601,27 @@ void Hivek::generate_mem_controls(int lane, ControlTable* ct) {
 
     m_size[lane][0]->write(ct->m_size);
     m_size[lane][1]->write(m_size[lane][0]->read());
+}
+
+void Hivek::access_dmem(int lane) {
+    // TODO add signal r/w to validate cache access
+    bool flag = p_value[lane][2]->read() == p_rvalue[lane][1]->read();
+    u32 m_wren = this->m_wren[lane][1]->read();
+    u32 m_size = this->m_size[lane][1]->read();
+    u32 addr   = vra[lane][1]->read() + immediate[lane][2]->read();
+    u32 data   = vrb[lane][1]->read();
+
+    if (flag) {
+        if (m_wren) {
+            switch (m_size) {
+            case 3:
+            case 2:
+            case 1:
+                mem->dwrite16(lane, addr, data);
+                break;
+            }
+        }
+    }
 }
 
 u32 Hivek::control_address(u32 instruction) {

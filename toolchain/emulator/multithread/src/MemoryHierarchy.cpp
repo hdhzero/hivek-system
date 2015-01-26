@@ -7,6 +7,11 @@ void MemoryHierarchy::reset() {
 
 void MemoryHierarchy::cycle() {
     // TODO
+
+    if (render) {
+        render = false;
+        fb.draw();
+    }
 }
 
 void MemoryHierarchy::update() {
@@ -102,7 +107,20 @@ u64 MemoryHierarchy::iread64(int lane, u32 address, bool hits[8]) {
 
     return tmp;
 }
- 
+
+void MemoryHierarchy::dwrite16(int lane, u32 address, u16 data) {
+    static int counter = 0;
+
+    counter = counter + 1;
+
+    if (counter > 640 * 8) {
+        render = true;
+        counter = 0;
+    }
+
+    fb.write_pixel(address, data);
+}
+
 void MemoryHierarchy::read_contents_from_file(char* filename) {
     std::ifstream file;
     char c;

@@ -49,6 +49,7 @@ namespace HivekMultithreadEmulator {
             void writeback_lane(int lane);
 
             void read_registers_in_lane(int lane);
+            void access_dmem(int lane);
             void calculate_next_rt_pc();
             void calculate_next_nrt_pc();
 
