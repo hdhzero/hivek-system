@@ -3,7 +3,7 @@ all:
         src/VCDMonitor.cpp \
         src/RegisterFile.cpp \
         src/Hivek.cpp \
-        src/Framebuffer.cpp \
+        src/GPU.cpp \
         src/MemoryHierarchy.cpp \
         hts.cpp -o hts -lSDL2
 

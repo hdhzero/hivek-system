@@ -1,6 +1,7 @@
 #include "../include/MemoryHierarchy.h"
-using namespace HivekMultithreadEmulator;
 #include <iostream>
+using namespace HivekMultithreadEmulator;
+
 void MemoryHierarchy::reset() {
     rpool.reset();
 }
@@ -10,7 +11,7 @@ void MemoryHierarchy::cycle() {
 
     if (render) {
         render = false;
-        fb.draw();
+        gpu.draw();
     }
 }
 
@@ -108,7 +109,9 @@ u64 MemoryHierarchy::iread64(int lane, u32 address, bool hits[8]) {
     return tmp;
 }
 
-void MemoryHierarchy::dwrite16(int lane, u32 address, u16 data) {
+void MemoryHierarchy::dwrite16(int lane, u32 address, u16 data) { }
+
+void MemoryHierarchy::dwrite32(int lane, u32 address, u32 data) {
     static int counter = 0;
 
     counter = counter + 1;
@@ -117,8 +120,8 @@ void MemoryHierarchy::dwrite16(int lane, u32 address, u16 data) {
         render = true;
         counter = 0;
     }
-
-    fb.write_pixel(address, data);
+//    gpu.write_pixel(address, data);
+    gpu.write_register(address, data);
 }
 
 void MemoryHierarchy::read_contents_from_file(char* filename) {

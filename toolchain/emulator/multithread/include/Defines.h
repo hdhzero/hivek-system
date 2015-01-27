@@ -113,6 +113,11 @@ namespace HivekMultithreadEmulator {
         BARREL_SRA
     };
 
+    enum GPUModes {
+        GPU_TEXT_MODE = 0,
+        GPU_VIDEO_MODE = 1
+    };
+
     struct RTNextPCSels {
         u32 pc_alu_sel;
         u32 alu_sel;

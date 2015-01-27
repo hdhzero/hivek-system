@@ -65,6 +65,7 @@ void RegisterFile::init() {
 
         for (int j = 0; j < 32; ++j) {
             registers[i][j] = 0;
+            registers[i][10] = 128512071;
         }
     }
 }

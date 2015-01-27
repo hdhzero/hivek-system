@@ -6,7 +6,7 @@
 #include "Defines.h"
 #include "Register.h"
 #include "RegisterPool.h"
-#include "Framebuffer.h"
+#include "GPU.h"
 
 namespace HivekMultithreadEmulator {
     class MemoryHierarchy {
@@ -23,6 +23,7 @@ namespace HivekMultithreadEmulator {
 
         public:
             void dwrite16(int lane, u32 address, u16 data);
+            void dwrite32(int lane, u32 address, u32 data);
 
         public:
             void read_contents_from_file(char* filename);
@@ -32,7 +33,7 @@ namespace HivekMultithreadEmulator {
 
         private:
             bool render;
-            FrameBuffer fb;
+            GPU gpu;
 
         private:
             RegisterPool rpool;

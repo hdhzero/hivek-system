@@ -615,9 +615,14 @@ void Hivek::access_dmem(int lane) {
         if (m_wren) {
             switch (m_size) {
             case 3:
+                mem->dwrite32(lane, addr, data);
+                break;
+
             case 2:
-            case 1:
                 mem->dwrite16(lane, addr, data);
+                break;
+
+            case 1:
                 break;
             }
         }
