@@ -101,7 +101,6 @@ void GPU::write_register(u32 addr, u32 data) {
             int r  = (data >> 16 + 7) & 0x1F;
             int c  = (data >> 16) & 0x07F;
             int ch = data & 0x0FFFF;
-std::cout << data << ' ' << ch << ' ' << c << ' ' << r << '\n';
             write_char(ch, r, c);
             break;
     }

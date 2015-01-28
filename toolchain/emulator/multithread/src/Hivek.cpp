@@ -864,7 +864,7 @@ bool Hivek::is_type_iii(u32 instruction) {
 }
 
 bool Hivek::is_type_iv(u32 instruction) {
-    return (instruction & 0x07F000000) == TYPE_IV_MASK;
+    return (instruction & 0x07FF00000) == TYPE_IV_MASK;
 }
 
 bool Hivek::is_type_v(u32 instruction) {

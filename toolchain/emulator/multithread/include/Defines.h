@@ -14,7 +14,7 @@ namespace HivekMultithreadEmulator {
     #define TYPE_I_MASK  0x070000000
     #define TYPE_II_MASK 0x078000000
     #define TYPE_III_MASK 0x07C000000
-    #define TYPE_IV_MASK 0x07E000000
+    #define TYPE_IV_MASK 0x07FE00000
     #define TYPE_V_MASK  0x000600000
 
     #define N_LANES 2
