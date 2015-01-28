@@ -19,8 +19,8 @@ int main(int argc, char** argv) {
     hivek.reset();
     mem.reset();
 
-    while (true) {
-//    for (int i = 0; i < 10000; i += 10) {
+//    while (true) {
+    for (int i = 0; i < 10000; i += 10) {
 //        vcd.dump_signals(i);
         hivek.cycle();
         mem.cycle();

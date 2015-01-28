@@ -62,11 +62,6 @@ void RegisterFile::init() {
         pr_registers[i][3] = 0;
 
         registers[i][0] = 0;
-
-        for (int j = 0; j < 32; ++j) {
-            registers[i][j] = 0;
-            registers[i][10] = 128512071;
-        }
     }
 }
 

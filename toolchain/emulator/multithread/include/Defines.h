@@ -15,7 +15,7 @@ namespace HivekMultithreadEmulator {
     #define TYPE_II_MASK 0x078000000
     #define TYPE_III_MASK 0x07C000000
     #define TYPE_IV_MASK 0x07FE00000
-    #define TYPE_V_MASK  0x000600000
+    #define TYPE_V_MASK  0x07E000000
 
     #define N_LANES 2
 
@@ -104,7 +104,10 @@ namespace HivekMultithreadEmulator {
 
         ALU_LT = 6,
         ALU_LTU = 7,
-        ALU_EQ = 8
+        ALU_EQ = 8,
+
+        ALU_LUI = 9,
+        ALU_LLI = 10
     };
 
     enum SHType {
@@ -214,7 +217,11 @@ namespace HivekMultithreadEmulator {
         { ALU_ADD, 0, 0, 1, 0, 0, BARREL_SRA, 0, 1, 0, 0, 1, 0, 0, 0, IK_LAM }, // shadd sra 53
 
         /* Type IV */
-        { ALU_ADD, 1, 1, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_B } // b bn 54
+        { ALU_ADD, 1, 1, 0, 0, 0, BARREL_SLL, 0, 0, 0, 0, 0, 0, 0, 0, IK_B },// b bn 54
+
+        /* Type V */
+        { ALU_LUI, 0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }, // lui
+        { ALU_LLI, 0, 1, 0, 0, 0, BARREL_SLL, 0, 0, 1, 0, 1, 0, 0, 0, IK_LAM }  // lli
     };
 }
 

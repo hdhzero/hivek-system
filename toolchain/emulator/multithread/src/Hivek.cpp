@@ -414,7 +414,13 @@ void Hivek::generate_rtks() {
 void Hivek::generate_immediates(int lane, u32 inst) {
     u32 tmp = 0;
 
-    if (is_type_iv(inst)) {
+    if (is_type_v(inst)) {
+        tmp = extract_immd_from_type_v(inst);
+
+        if (inst & (1 << 23)) {
+            tmp <<= 16;
+        }
+    } else if (is_type_iv(inst)) {
         tmp = extract_immd_from_type_iv(inst);
 
         if (tmp & 0x08000) {
@@ -632,7 +638,14 @@ void Hivek::access_dmem(int lane) {
 u32 Hivek::control_address(u32 instruction) {
     int tmp;
 
-    if (is_type_iv(instruction)) {
+    if (is_type_v(instruction)) {
+std::cout << "ashduahduasd\n";
+        if (instruction & (1 << 23)) {
+            return 55;
+        } else {
+            return 56;
+        }
+    } else if (is_type_iv(instruction)) {
         return 54;
     } else if (is_type_iii(instruction)) {
         if (tmp = is_shadd(instruction)) {
@@ -781,6 +794,12 @@ u32 Hivek::alu(u32 op, u32 a, u32 b) {
 
         case ALU_EQ:
             return a == b;
+
+        case ALU_LUI:
+            return b;
+
+        case ALU_LLI:
+            return a | b;
     }
 
     return 0;
@@ -816,10 +835,18 @@ u32 Hivek::extract_predicate_register(u32 instruction) {
 }
 
 u32 Hivek::extract_ra(u32 instruction) {
+    if (is_type_v(instruction)) {
+        return (instruction >> 19) & 0x0F;
+    }
+
     return (instruction >> 3) & 0x01F;
 }
 
 u32 Hivek::extract_rb(u32 instruction) {
+    if (is_type_v(instruction)) {
+        return (instruction >> 19) & 0x0F;
+    }
+
     return (instruction >> 8) & 0x01F;
 }
 
@@ -851,6 +878,10 @@ u32 Hivek::extract_immd_from_type_iv(u32 instruction) {
     return (instruction >> 3) & 0x0FFFF;
 }
 
+u32 Hivek::extract_immd_from_type_v(u32 instruction) {
+    return (instruction >> 3) & 0x0FFFF;
+}
+
 bool Hivek::is_type_i(u32 instruction) {
     return (instruction & 0x078000000) == TYPE_I_MASK;
 }
@@ -868,7 +899,7 @@ bool Hivek::is_type_iv(u32 instruction) {
 }
 
 bool Hivek::is_type_v(u32 instruction) {
-    return (instruction & TYPE_V_MASK) == TYPE_V_MASK;
+    return (instruction & 0x07F000000) == TYPE_V_MASK;
 }
 
 int Hivek::is_shadd(u32 instruction) {
@@ -924,12 +955,14 @@ u32 Hivek::get_first_instruction(u64 instructions, int& size) {
     bool flag; 
 
     tmp = instructions >> 32;
-    flag = is_type_i(tmp) || is_type_ii(tmp) || is_type_iv(tmp) || is_type_iii(tmp);
+    flag = is_type_i(tmp) || is_type_ii(tmp) || is_type_iv(tmp);
+    flag = flag || is_type_iii(tmp) || is_type_v(tmp);
 
     if (flag) {
         size = 32;
         return tmp;
     } else {
+        // TODO type v is not 24 bits anymore
         tmp = instructions >> 40;
         flag = is_type_v(tmp); 
 

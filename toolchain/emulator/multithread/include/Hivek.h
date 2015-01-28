@@ -71,6 +71,7 @@ namespace HivekMultithreadEmulator {
             u32 extract_immd_from_type_i(u32 instruction);
             u32 extract_immd_from_type_ii(u32 instruction);
             u32 extract_immd_from_type_iv(u32 instruction);
+            u32 extract_immd_from_type_v(u32 instruction);
 
             bool mask(u32 v, u32 m);
             bool is_type_i(u32 instruction);
