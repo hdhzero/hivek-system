@@ -771,11 +771,12 @@ void Hivek::generate_alu_res_for_lane(int lane) {
 
         case RTK_RT_NRT:
         case RTK_RT_NOP:
-        case RTK_NRT_NOP:
         case RTK_NOP_NOP:
             op_a = lane == 0 ? pcs[0][5]->read() : pcs[1][5]->read(); break;
+
+        case RTK_NRT_NOP:
+            op_a = pcs[1][5]->read(); break;
         }
-//        op_a = pcs[lane][5]->read();
     } else {
         op_a = vra[lane][1]->read();
     }
