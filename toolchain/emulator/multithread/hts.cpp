@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
 //    while (true) {
     for (int i = 0; i < 10000; i += 10) {
-//        vcd.dump_signals(i);
+        vcd.dump_signals(i);
         hivek.cycle();
         mem.cycle();
         hivek.update();

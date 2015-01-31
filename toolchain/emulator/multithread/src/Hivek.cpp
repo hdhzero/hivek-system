@@ -155,7 +155,7 @@ void Hivek::calculate_next_rt_pc() {
         th = th - 8;
     }
 
-    pc[threads[0][4]->read()]->write(next_pc);
+    pc[th]->write(next_pc);
 }
 
 void Hivek::calculate_next_nrt_pc() {
@@ -211,7 +211,7 @@ void Hivek::calculate_next_nrt_pc() {
         th = th + 8;
     }
 
-    pc[threads[1][4]->read()]->write(next_pc);
+    pc[th]->write(next_pc);
 }
 
 RTNextPCSels Hivek::rtnp_make(u32 pc_alu_sel, u32 alu_sel, u32 zero_sz_sel, u32 sz_sel) {
@@ -333,6 +333,114 @@ RTNextPCSels Hivek::next_rt_pc_nop() {
     return rtnp_make(1, 0, 1, 0);
 }
 
+RTNextPCSels Hivek::next_nrt_pc_nrt_nrt(u32 k0, u32 k1, u32 p0, u32 p1) {
+    u32 kind = (k0 << 2) | k1;
+    
+    switch (kind) {
+    case IK_LAM_LAM:
+        return rtnp_make(1, 0, 0, 1);
+
+    case IK_LAM_J:
+        return rtnp_make(0, 1, 0, 0);
+
+    case IK_LAM_JR:
+        if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_LAM_B:
+        if (p1) {
+            return rtnp_make(0, 1, 0, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_JR_J:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else {
+            return rtnp_make(0, 1, 0, 0);
+        }
+
+    case IK_JR_JR:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_JR_B:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 0, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        } 
+
+    case IK_B_J:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else {
+            return rtnp_make(0, 1, 0, 0);
+        }
+
+    case IK_B_JR:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+
+    case IK_B_B:
+        if (p0) {
+            return rtnp_make(0, 0, 1, 0);
+        } else if (p1) {
+            return rtnp_make(0, 1, 0, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 1);
+        }
+    }
+}
+
+RTNextPCSels Hivek::next_nrt_pc_rt_nrt(u32 k1, u32 p1) {
+    switch (k1) {
+    case IK_LAM:
+        return rtnp_make(1, 0, 0, 0);
+
+    case IK_J:
+        return rtnp_make(0, 1, 1, 0);
+
+    case IK_JR:
+        if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 0);
+        }
+
+    case IK_B:
+        if (p1) {
+            return rtnp_make(0, 1, 1, 0);
+        } else {
+            return rtnp_make(1, 0, 0, 0);
+        }
+    }
+}
+
+RTNextPCSels Hivek::next_nrt_pc_nrt_nop(u32 k0, u32 p0) {
+    return next_rt_pc_rt_nrt(k0, p0);
+}
+
+RTNextPCSels Hivek::next_nrt_pc_nop() {
+    return rtnp_make(1, 0, 1, 0);
+}
+
 RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
     switch (rtk) {
     case RTK_RT_RT:
@@ -354,18 +462,18 @@ RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
 RTNextPCSels Hivek::nrt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
     switch (rtk) {
     case RTK_NRT_NRT:
-        return next_rt_pc_rt_rt(k0, k1, p0, p1);
+        return next_nrt_pc_nrt_nrt(k0, k1, p0, p1);
 
     case RTK_RT_NRT:
-        return next_rt_pc_rt_nrt(k1, p1);
+        return next_nrt_pc_rt_nrt(k1, p1);
 
     case RTK_NRT_NOP:
-        return next_rt_pc_rt_nop(k0, p0);
+        return next_nrt_pc_nrt_nop(k0, p0);
 
     case RTK_RT_RT:
     case RTK_RT_NOP:
     case RTK_NOP_NOP:
-        return next_rt_pc_nop();
+        return next_nrt_pc_nop();
     }
 }
 
@@ -718,7 +826,6 @@ u32 Hivek::control_address(u32 instruction) {
     int tmp;
 
     if (is_type_v(instruction)) {
-std::cout << "ashduahduasd\n";
         if (instruction & (1 << 23)) {
             return 55;
         } else {
