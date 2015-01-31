@@ -159,7 +159,59 @@ void Hivek::calculate_next_rt_pc() {
 }
 
 void Hivek::calculate_next_nrt_pc() {
-    // TODO
+    RTNextPCSels sel;
+    u32 alu_res;
+    u32 pc_res;
+    u32 sz_res;
+    u32 sz1;
+    u32 sz2;
+    u32 szs;
+    u32 next_pc;
+    u32 th;
+
+    u32 rtk;
+    u32 k0;
+    u32 k1;
+    u32 p0;
+    u32 p1;
+
+    rtk = this->instruction_rtk[4]->read();
+    k0  = this->instruction_kind[0][2]->read();
+    k1  = this->instruction_kind[1][2]->read();
+    p0  = this->pres[0]->read();
+    p1  = this->pres[1]->read();
+
+    sel = nrt_next_pc(rtk, k0, k1, p0, p1);
+
+    sz1 = decode_instruction_size(instruction_size[0][4]->read());
+    sz2 = decode_instruction_size(instruction_size[1][4]->read());
+
+    if (sel.alu_sel) {
+        alu_res = this->alu_res[1]->read();
+    } else {
+        alu_res = this->alu_res[0]->read();
+    }
+
+    if (sel.zero_sz_sel) {
+        sz_res = 0;
+    } else {
+        if (rtk == RTK_RT_NRT) {
+            sz_res = sel.sz_sel ? sz1 + sz2 : sz2;
+        } else {
+            sz_res = sel.sz_sel ? sz1 + sz2 : sz1;
+        }
+    }
+
+    pc_res = sel.pc_alu_sel ? pcs[1][6]->read() : alu_res;
+    next_pc = pc_res + sz_res;
+
+    th = threads[1][4]->read();
+
+    if (th < 8) {
+        th = th + 8;
+    }
+
+    pc[threads[1][4]->read()]->write(next_pc);
 }
 
 RTNextPCSels Hivek::rtnp_make(u32 pc_alu_sel, u32 alu_sel, u32 zero_sz_sel, u32 sz_sel) {
@@ -277,6 +329,10 @@ RTNextPCSels Hivek::next_rt_pc_rt_nop(u32 k0, u32 p0) {
     return next_rt_pc_rt_nrt(k0, p0);
 }
 
+RTNextPCSels Hivek::next_rt_pc_nop() {
+    return rtnp_make(1, 0, 1, 0);
+}
+
 RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
     switch (rtk) {
     case RTK_RT_RT:
@@ -287,6 +343,29 @@ RTNextPCSels Hivek::rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
 
     case RTK_RT_NOP:
         return next_rt_pc_rt_nop(k0, p0);
+
+    case RTK_NRT_NRT:
+    case RTK_NRT_NOP:
+    case RTK_NOP_NOP:
+        return next_rt_pc_nop();
+    }
+}
+
+RTNextPCSels Hivek::nrt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1) {
+    switch (rtk) {
+    case RTK_NRT_NRT:
+        return next_rt_pc_rt_rt(k0, k1, p0, p1);
+
+    case RTK_RT_NRT:
+        return next_rt_pc_rt_nrt(k1, p1);
+
+    case RTK_NRT_NOP:
+        return next_rt_pc_rt_nop(k0, p0);
+
+    case RTK_RT_RT:
+    case RTK_RT_NOP:
+    case RTK_NOP_NOP:
+        return next_rt_pc_nop();
     }
 }
 

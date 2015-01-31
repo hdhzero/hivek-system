@@ -91,7 +91,9 @@ namespace HivekMultithreadEmulator {
             RTNextPCSels next_rt_pc_rt_rt(u32 k0, u32 k1, u32 p0, u32 p1);
             RTNextPCSels next_rt_pc_rt_nrt(u32 k0, u32 p0);
             RTNextPCSels next_rt_pc_rt_nop(u32 k0, u32 p0);
+            RTNextPCSels next_rt_pc_nop();
             RTNextPCSels rt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1);
+            RTNextPCSels nrt_next_pc(u32 rtk, u32 k0, u32 k1, u32 p0, u32 p1);
 
         private:
             RegisterPool rpool;
