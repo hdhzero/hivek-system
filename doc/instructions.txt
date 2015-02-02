@@ -1,0 +1,89 @@
+Possible sizes:
+    The Hivek architecture works with instructions of 16, 24 and 32 bits in size
+
+Instruction set:
+    arith:
+        add rc, ra, rb
+        sub rc, ra, rb
+        addi rb, ra, immd10
+        addl rb, ra, immd32
+
+    logical:
+        and rc, ra, rb
+        andi rb, ra, immd10
+        andl rb, ra, immd32
+
+        or  rc, ra, rb
+        ori rb, ra, immd10
+        orl rb, ra, immd32
+
+        xor rc, ra, rb
+        xori rb, ra, immd10
+        xorl rb, ra, immd32
+
+        nor rc, ra, rb
+        nori rb, ra, immd10
+        norl rb, ra, immd32
+
+    bitwise:
+        sllv rc, ra, rb
+        srlv rc, ra, rb
+        srav rc, ra, rb
+        shadd rc, ra, rb SHT immd
+
+    comparison:
+        eq rc, ra, rb
+        lt rc, ra, rb
+        ltu rc, ra, rb
+
+    memory:
+        lw rb, ra, immd
+        lh rb, ra, immd
+        lb rb, ra, immd
+        lhu rb, ra, immd
+        lbu rb, ra, immd
+
+        sw rb, ra, immd
+        sh rb, ra, immd
+        sb rb, ra, immd
+
+    control:
+        j LABEL
+        b LABEL
+        bn LABEL
+        jr rc
+        jalr rc
+immd:
+    add and or xor eq lt ltu 
+    lw lh lb lhu lbu
+    sw sh sb
+
+
+000 0000 000 000 000 
+001 0000 000 000 000 
+010 0000 000 000 000
+011 0ooo ooc ccc cbb bbba aaaa (5)
+
+011 10oo ooi iii iii iiib bbbb aaaa appp (1)
+011 110L iii iii iii iiii iiii iiii iiii (2)
+011 1110 tto ooo occ cccb bbbb aaaa appp (3)
+011 1111 000 00p iii iiii iiii iiii ippp (4)
+
+011 10oo ooi iii iii iiib bbbb aaaa appp (1)
+011 110L iii iii iii iiii iiii iiii iiii (2)
+011 1110 tto ooo occ cccb bbbb aaaa appp (3)
+011 1111 0pa aaa iii iiii iiii iiii ippp (5)
+011 1111 10- --- --- ---- ---- ---- ----
+011 1111 110 --- --- ---- ---- ---- ----
+011 1111 111 0-- --- ---- ---- ---- ----
+011 1111 111 0-- --- ---- ---- ---- ----
+011 1111 111 10p iii iiii iiii iiii ippp (4)
+011 1111 111 110 --- ---- ---- ---- ----
+011 1111 111 111 0oo ooob bbbb aaaa appp (1)
+
+header0 <= instruction() = "1110";
+header1 <= instruction() = "11110";
+header2 <= instruction() = "111110";
+header3 <= instruction() = "1111110";
+
+
