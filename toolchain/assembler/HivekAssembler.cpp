@@ -85,6 +85,15 @@ bool HivekAssembler::add_directive(std::vector<std::string>& vec, std::string& s
     Code c;
     bool error = false;
 
+    if (vec[0].compare(".include") == 0) {
+std::cout << "ahsduahda\n";
+        int pos = str.find('"');
+        std::string tmp;
+        get_string(str, tmp);
+        parse(tmp);
+        return error;
+    }
+
     // .asciiz
     if (vec[0].compare(".asciiz") == 0) {
         int pos = str.find('"');
@@ -398,7 +407,7 @@ void HivekAssembler::parse(std::string filename) {
         }
 
         if (error) {
-            std::cout << "Error on line " << line << std::endl;
+            std::cout << filename << ": error on line " << line << std::endl;
         }
     }
 
